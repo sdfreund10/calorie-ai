@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_01_033000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_02_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -43,18 +43,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_01_033000) do
   end
 
   create_table "calorie_entries", force: :cascade do |t|
+    t.jsonb "ai_metadata", default: {}, null: false
     t.integer "calories", null: false
     t.datetime "created_at", null: false
     t.date "eaten_on", null: false
     t.integer "meal", default: 0, null: false
     t.string "name"
     t.text "note"
+    t.integer "state", default: 1, null: false
     t.datetime "updated_at", null: false
     t.index ["eaten_on", "created_at"], name: "index_calorie_entries_on_eaten_on_and_created_at"
     t.index ["eaten_on"], name: "index_calorie_entries_on_eaten_on"
     t.index ["meal"], name: "index_calorie_entries_on_meal"
-    t.check_constraint "calories > 0", name: "calorie_entries_calories_positive"
-    t.check_constraint "meal >= 0 AND meal <= 4", name: "calorie_entries_meal_valid"
+    t.index ["state"], name: "index_calorie_entries_on_state"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

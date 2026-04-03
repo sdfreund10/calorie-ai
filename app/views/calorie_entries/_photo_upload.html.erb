@@ -1,0 +1,103 @@
+<% calorie_entry_instance = local_assigns.fetch(:calorie_entry) { CalorieEntry.new(eaten_on: date, meal: :other) } %>
+<div class="space-y-4" data-controller="photo-entry">
+  <nav class="flex gap-2 text-xs text-neutral-500" aria-label="Steps">
+    <span class="font-medium text-neutral-200">1 Photo</span>
+    <span class="text-neutral-600" aria-hidden="true">·</span>
+    <span>2 Details</span>
+  </nav>
+
+  <% if calorie_entry_instance.errors.any? %>
+    <div class="rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-sm text-red-200">
+      <p class="font-semibold">Could not start entry:</p>
+      <ul class="mt-1 list-disc pl-5">
+        <% calorie_entry_instance.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div data-photo-entry-target="uploadPrompt" class="space-y-4">
+    <p class="text-xs text-neutral-500">
+      Add a photo to analyze or enter details by hand. You can skip if you prefer no photo.
+    </p>
+
+    <div class="grid grid-cols-2 gap-2">
+      <button
+        type="button"
+        class="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2.5 text-sm font-medium text-neutral-100 transition hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+        data-action="photo-entry#pickLibrary"
+      >
+        Choose photo
+      </button>
+      <button
+        type="button"
+        class="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-2.5 text-sm font-medium text-neutral-100 transition hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+        data-action="photo-entry#pickCamera"
+      >
+        Take photo
+      </button>
+    </div>
+  </div>
+
+  <div data-photo-entry-target="preview" class="hidden space-y-2">
+    <div class="relative overflow-hidden rounded-lg border border-white/10 bg-[#0c0f15]">
+      <img data-photo-entry-target="previewImg" class="max-h-44 w-full object-contain" alt="" />
+    </div>
+    <div class="flex justify-end">
+      <button
+        type="button"
+        class="text-xs text-neutral-400 underline decoration-white/20 underline-offset-2 hover:text-neutral-200"
+        data-action="photo-entry#clearPreview"
+      >
+        Remove photo
+      </button>
+    </div>
+  </div>
+
+  <div>
+    <label class="mb-1 block text-sm font-medium text-neutral-300" for="photo-upload-user-description">Description <span class="font-normal text-neutral-500">(optional)</span></label>
+    <textarea
+      id="photo-upload-user-description"
+      rows="2"
+      data-photo-entry-target="description"
+      class="w-full rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20"
+      placeholder="e.g. lunch portion, no dressing"
+    ></textarea>
+  </div>
+
+  <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-photo-entry-target="libraryInput" data-action="change->photo-entry#fileChosen" class="sr-only" tabindex="-1" aria-hidden="true" />
+  <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" capture="environment" data-photo-entry-target="cameraInput" data-action="change->photo-entry#fileChosen" class="sr-only" tabindex="-1" aria-hidden="true" />
+
+  <div data-photo-entry-target="actions" class="hidden space-y-2">
+    <% analyze_model = CalorieEntry.new(eaten_on: date, meal: :other) %>
+    <%= form_with model: analyze_model, url: log_entries_path(date: date), multipart: true, html: { class: "block", data: { photo_entry_target: "analyzeForm", action: "submit->photo-entry#syncDescription turbo:submit-start->photo-entry#startAnalyzeLoading turbo:submit-end->photo-entry#endAnalyzeLoading" } } do |f| %>
+      <%= hidden_field_tag :run_ai_analysis, "1" %>
+      <%= hidden_field_tag :user_description, "" %>
+      <%= f.hidden_field :eaten_on, value: date %>
+      <%= f.hidden_field :meal, value: :other %>
+      <%= f.hidden_field :calories, value: 1 %>
+      <%= f.file_field :image, accept: "image/jpeg,image/png,image/gif,image/webp", class: "sr-only", tabindex: "-1", "aria-hidden": true %>
+      <%= f.submit "Analyze", data: { photo_entry_target: "analyzeSubmit" }, class: "w-full rounded-md border border-white/20 bg-white/[0.08] px-4 py-3 text-sm font-semibold text-neutral-100 transition hover:border-white/30 hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1117]" %>
+    <% end %>
+
+    <% manual_model = CalorieEntry.new(eaten_on: date, meal: :other) %>
+    <%= form_with model: manual_model, url: log_entries_path(date: date), multipart: true, html: { class: "block", data: { photo_entry_target: "manualForm", action: "submit->photo-entry#syncDescription" } } do |f| %>
+      <%= hidden_field_tag :run_ai_analysis, "0" %>
+      <%= hidden_field_tag :user_description, "" %>
+      <%= f.hidden_field :eaten_on, value: date %>
+      <%= f.hidden_field :meal, value: :other %>
+      <%= f.hidden_field :calories, value: 1 %>
+      <%= f.file_field :image, accept: "image/jpeg,image/png,image/gif,image/webp", class: "sr-only", tabindex: "-1", "aria-hidden": true %>
+      <%= f.submit "Enter manually", class: "w-full rounded-md border border-white/15 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-neutral-100 transition hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20" %>
+    <% end %>
+  </div>
+
+  <p class="text-center">
+    <%= form_with model: CalorieEntry.new(eaten_on: date, meal: :other), url: log_entries_path(date: date), multipart: true, html: { class: "block" } do |f| %>
+      <%= hidden_field_tag :run_ai_analysis, "0" %>
+      <%= f.hidden_field :eaten_on, value: date %>
+      <%= f.submit "Skip — continue without a photo", class: "text-sm text-neutral-500 underline decoration-white/15 underline-offset-2 transition hover:text-neutral-300 hover:decoration-white/30" %>
+    <% end %>
+  </p>
+</div>

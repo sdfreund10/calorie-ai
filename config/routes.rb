@@ -12,5 +12,8 @@ Rails.application.routes.draw do
   root to: redirect { "/log/today" }
 
   get "log/:date", to: "logs#show", as: :daily_log
+  get "log/:date/entries/new", to: "calorie_entries#new", as: :new_log_entry
+  # get "log/:date/entries/details", to: "calorie_entries#details", as: :log_entry_details
   post "log/:date/entries", to: "calorie_entries#create", as: :log_entries
+  patch "log/:date/entries/:id", to: "calorie_entries#update", as: :log_entry
 end
