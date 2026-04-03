@@ -1,0 +1,10 @@
+<% if @calorie_entry.errors.any? %>
+  <%= turbo_stream.replace "entry_form" do %>
+    <%= render "calorie_entries/form", calorie_entry: @calorie_entry, date: @date %>
+  <% end %>
+<% else %>
+  <%= turbo_stream.append "entries", partial: "calorie_entries/calorie_entry", locals: { calorie_entry: @calorie_entry } %>
+  <%= turbo_stream.replace "entry_form" do %>
+    <%= render "calorie_entries/form", calorie_entry: @new_calorie_entry, date: @date %>
+  <% end %>
+<% end %>
