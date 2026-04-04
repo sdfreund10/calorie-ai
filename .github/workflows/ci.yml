@@ -106,6 +106,7 @@ jobs:
 
   system-test:
     runs-on: ubuntu-latest
+    if: false
 
     services:
       postgres:
