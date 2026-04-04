@@ -19,10 +19,11 @@ gem "image_processing", "~> 1.2"
 gem "dotenv-rails", "~> 3.2"
 
 group :development, :test do
-  gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+  gem "debug", platforms: %i[mri windows], require: "debug/prelude"
   gem "bundler-audit", require: false
   gem "brakeman", require: false
-  gem "rubocop-rails-omakase", require: false
+  gem "standard", ">= 1.35.1", require: false
+  gem "standard-rails", require: false
 end
 
 group :development do

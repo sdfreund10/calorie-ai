@@ -8,7 +8,6 @@ class MealSuggestionSchema < RubyLLM::Schema
 
   string :name,
     description: "Short dish or food name",
-    required: false,
     max_length: 80
 
   integer :calories,
@@ -18,4 +17,35 @@ class MealSuggestionSchema < RubyLLM::Schema
   string :note,
     description: "Optional notes, caveats, or uncertainty about the estimate",
     required: false
+
+  Output = Data.define(*properties.keys)
+  def self.serialize_output(content)
+    attrs = content.to_h.symbolize_keys
+
+    # validate required keys
+    required_keys = required_properties # [:name, :calories]
+    missing_keys = required_keys - attrs.keys
+    if missing_keys.any?
+      raise ArgumentError, "missing required keys: #{missing_keys.join(", ")}"
+    end
+
+    # set default values for optional keys
+    merged = optional_properties.to_h { |k| [k, nil] }.merge(attrs)
+
+    # return structured output object
+    Output.new(**merged)
+  rescue NoMethodError => e
+    # handle no method errors from non-Hash objects
+    if e.message.include?("undefined method 'to_h'")
+      raise ArgumentError, "expected a Hash or object responding to #to_h, got #{content.class.name}"
+    else
+      raise e
+    end
+  end
+
+  def self.optional_properties
+    # dsl provided by ruby_llm-schema
+    properties.keys - required_properties
+  end
+  private_class_method :optional_properties
 end

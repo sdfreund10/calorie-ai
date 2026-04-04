@@ -1,0 +1,35 @@
+---
+description: Ruby/Rails, Sandi Metz–style domain OO, and ActiveRecord idioms
+globs:
+  - app/**/*.rb
+  - config/**/*.rb
+  - lib/**/*.rb
+alwaysApply: false
+---
+
+# Backend (Ruby / Rails)
+
+## Controllers
+
+- Prefer skinny controllers: strong params, clear `before_action` usage, restful actions.
+- Use `redirect_to` / `render` consistently; for Hotwire, return appropriate Turbo Stream or format responses where the app already does.
+
+## Domain modeling (Sandi Metz + Rails)
+
+- **Objects and messages**: Prefer small types with one clear reason to change; expose a narrow public API and talk to collaborators by **sending messages** (“tell, don’t ask”), instead of pulling their internals apart in long chains.
+- **Composition over deep inheritance**: Use POROs, value objects, or policy-style objects when behavior branches on role or state; reach for **polymorphism** before large `if`/`case` trees on “what kind of thing is this?”.
+- **Lean on the framework for data shape**: Use **`validations`**, **`enum`** (and related Rails APIs), **`scope`** for reusable query slices, **`delegate`** for delegation, and **associations** with appropriate `dependent` / `inverse_of` as the first line before custom SQL.
+- **Queries**: Express repeated or named query concepts as **`scope`**s (or a dedicated query object when a scope becomes unwieldy); keep controllers and serializers from owning ad-hoc `where`/`joins` chains.
+- **Callbacks**: Use **sparingly** for simple lifecycle symmetry; if a callback hides important business flow or spans many concerns, prefer an explicit orchestrator object (a small PORO) with a single entry point so the story stays visible.
+- **Cross-cutting flows**: When logic spans models, the boundary, or an external API (e.g. LLM), use a **small, intention-revealing object** (command / coordinator) with an obvious name—not a kitchen-sink “service” that accumulates unrelated steps.
+- **Performance**: Keep N+1 queries in mind; use `includes` / `preload` when listing associated records in views.
+
+## Config
+
+- Environment-specific behavior belongs in `config/environments/*.rb` or initializers, not scattered conditionals in app code.
+- New credentials or env vars: document the name in code comments or README only when the team expects it — avoid hardcoding secrets.
+
+## Security
+
+- Mass assignment: always use strong parameters; never pass raw `params` into `update` / `create`.
+- HTML in user content: default to escaping in views; use `sanitize` / allowlists only when required.

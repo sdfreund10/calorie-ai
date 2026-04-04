@@ -1,0 +1,40 @@
+---
+description: Stack, layout, and defaults for all work in this repo
+alwaysApply: true
+---
+
+# Calorie AI — core context
+
+## Stack
+
+- **Ruby** 4.x (see `.ruby-version`), **Rails** ~8.1, **PostgreSQL**
+- **Hotwire**: Turbo + Stimulus; **importmap-rails** (no `package.json` / npm workflow for app JavaScript)
+- **Assets**: Propshaft, **Tailwind** via `tailwindcss-rails` (source under `app/assets/tailwind/`)
+- **Infra in-app**: Solid Cache / Queue / Cable;
+
+## Where things live
+
+| Area | Paths |
+|------|--------|
+| HTTP | `app/controllers/`, `config/routes.rb` |
+| Domain logic | `app/models/`, `app/services/` (if present) |
+| UI | `app/views/`, `app/helpers/` |
+| JS behavior | `app/javascript/controllers/` |
+| Styles | `app/assets/tailwind/application.css`, built CSS in `app/assets/builds/` |
+| DB | `db/migrate/`, `db/schema.rb` |
+| Tests | `test/` (Minitest), system tests with Capybara |
+
+## Quality gate
+
+Prefer matching what CI enforces: `bin/rubocop`, `bin/rails test` (and `test:system` when UI changes), `bin/brakeman`, `bin/bundler-audit`, `bin/importmap audit`. Local aggregate: `bin/ci` (see `config/ci.rb`).
+
+**Style**: `rubocop-rails-omakase` via `.rubocop.yml` — follow it unless the team explicitly changes config.
+
+## Design defaults
+
+- Prefer **Sandi Metz–style OO** for domain behavior (small objects, message passing, composition and polymorphism over sprawling conditionals). For ActiveRecord boundaries, **lean on Rails** (validations, enums, scopes, associations, `delegate`) before inventing parallel patterns—see `backend-rails.mdc`.
+
+## Editing norms
+
+- Keep changes scoped to the request; avoid drive-by refactors and unrelated files.
+- Do not commit secrets; use env / credentials patterns already in the app (`dotenv-rails` in Gemfile for dev/test).

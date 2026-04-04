@@ -6,12 +6,12 @@ class CalorieEntry < ApplicationRecord
 
   has_one_attached :image
 
-  enum :meal, { breakfast: 0, lunch: 1, dinner: 2, snack: 3, other: 4 }
-  enum :state, { draft: 0, final: 1 }, default: :draft
+  enum :meal, {breakfast: 0, lunch: 1, dinner: 2, snack: 3, other: 4}
+  enum :state, {draft: 0, final: 1}, default: :draft
 
   validates :eaten_on, presence: true
-  validates :calories, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, if: :final?
-  validates :name, length: { maximum: 80 }, allow_blank: true
+  validates :calories, presence: true, numericality: {only_integer: true, greater_than_or_equal_to: 0}, if: :final?
+  validates :name, length: {maximum: 80}, allow_blank: true
   validate :image_type_and_size, if: -> { image.attached? }
   validate :no_revert_from_final_to_draft
 
@@ -22,15 +22,11 @@ class CalorieEntry < ApplicationRecord
   store_accessor :ai_metadata, :analysis_status, :error_message, :suggestions, :model
   before_create :set_defaults
 
-  def merge_ai_metadata!(attrs)
-    self.ai_metadata = (ai_metadata || {}).stringify_keys.merge(attrs.stringify_keys)
-  end
-
   def analyze!
     return unless image.attached? && draft?
 
     analysis = image.blob.open do |file|
-      result = FoodPhotoAnalyzer.new(
+      FoodPhotoAnalyzer.new(
         image_path: file.path,
         user_description: note
       ).call
@@ -38,11 +34,14 @@ class CalorieEntry < ApplicationRecord
 
     if analysis.success
       self.analysis_status = "completed"
-      self.suggestions = analysis.attributes.stringify_keys
+      self.suggestions = analysis.attributes.to_h
       self.error_message = nil
-      self.name = analysis.attributes[:name]
-      self.calories = analysis.attributes[:calories]
-      self.note += "\n✨ AI Analysis ✨\n#{analysis.attributes[:note]}" if analysis.attributes[:note].present?
+      self.name = analysis.attributes.name
+      self.calories = analysis.attributes.calories
+      if analysis.attributes.note.present?
+        ai_suffix = "✨ AI Analysis ✨\n#{analysis.attributes.note}"
+        self.note = note.present? ? "#{note}\n#{ai_suffix}" : ai_suffix
+      end
     else
       self.analysis_status = "failed"
       self.error_message = analysis.error_message

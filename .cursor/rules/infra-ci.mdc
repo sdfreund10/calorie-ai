@@ -1,0 +1,18 @@
+---
+description: CI workflow and deployment-related config
+globs:
+  - .github/**/*.yml
+  - config/deploy.yml
+alwaysApply: false
+---
+
+# CI & deploy
+
+## GitHub Actions
+
+- Changes should keep jobs green: Ruby setup with `bundler-cache`, Postgres service for tests, env vars matching `.github/workflows/ci.yml` (e.g. `DATABASE_URL`).
+- Security steps mirror local scripts: `bin/brakeman`, `bin/bundler-audit`, `bin/importmap audit`, `bin/rubocop`.
+
+## Kamal
+
+- `config/deploy.yml` defines deploy targets and accessories; editing deploy config should stay in sync with how the app is run in production (env secrets, DB, Thruster/Puma, etc.).

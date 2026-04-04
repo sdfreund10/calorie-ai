@@ -1,0 +1,24 @@
+---
+description: ERB views, Turbo, and Stimulus controllers
+globs:
+  - app/views/**/*.erb
+  - app/javascript/**/*.js
+alwaysApply: false
+---
+
+# Frontend (Hotwire)
+
+## Views (ERB)
+
+- Prefer Rails helpers and partials; keep partials focused and named with a leading underscore.
+- Turbo: use `turbo_frame_tag` / `turbo_stream` patterns consistent with existing screens; match `dom_id` targets to what controllers broadcast or render.
+- Forms: use `form_with`, appropriate `data-turbo` / `local` behavior aligned with the rest of the app.
+
+## Stimulus
+
+- One concern per controller file under `app/javascript/controllers/`; register in `controllers/index.js` when adding new controllers.
+- Use `data-*-target`, `data-action`, and values; avoid large imperative DOM manipulation unless necessary — prefer declarative actions.
+
+## Importmap
+
+- New JS dependencies: pin with `bin/importmap pin <package>` (or project’s documented flow), not ad-hoc remote scripts.

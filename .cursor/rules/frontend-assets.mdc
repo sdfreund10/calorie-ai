@@ -1,0 +1,12 @@
+---
+description: Tailwind and built CSS assets
+globs:
+  - app/assets/**/*.css
+alwaysApply: false
+---
+
+# CSS / Tailwind
+
+- **Source of truth**: Tailwind entry and `@theme` / `@layer` usage live under `app/assets/tailwind/` (e.g. `application.css`). Edited Tailwind is compiled into `app/assets/builds/tailwind.css` — treat builds as generated output.
+- Prefer utility classes and small component patterns consistent with existing views; avoid duplicating legacy `app/assets/stylesheets/application.css` unless the app still uses it for a specific reason.
+- Respect accessibility: contrast, focus states, and semantic HTML from ERB — pair style changes with visible focus/hover where interactive.
