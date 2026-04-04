@@ -11,7 +11,7 @@ class LogsController < ApplicationController
   private
 
   def parse_date(value)
-    value == "today" ? Date.current : Date.iso8601(value)
+    (value == "today") ? Date.current : Date.iso8601(value)
   rescue ArgumentError, TypeError
     nil
   end

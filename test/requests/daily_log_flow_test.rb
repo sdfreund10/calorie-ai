@@ -51,14 +51,14 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     date = Date.new(2026, 4, 2)
 
     post log_entries_path(date: date),
-         params: {
-           calorie_entry: {
-             name: "Pasta",
-             meal: "dinner",
-             calories: 700
-           }
-         },
-         headers: { "Accept" => Mime[:turbo_stream].to_s }
+      params: {
+        calorie_entry: {
+          name: "Pasta",
+          meal: "dinner",
+          calories: 700
+        }
+      },
+      headers: {"Accept" => Mime[:turbo_stream].to_s}
 
     assert_response :success
     assert_equal Mime[:turbo_stream].to_s, response.media_type
@@ -84,7 +84,7 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     date = Date.new(2026, 4, 6)
     fake = FoodPhotoAnalyzer::Result.new(
       success: true,
-      attributes: { name: "AI Salad", meal: "lunch", calories: 350, note: "ok" }.with_indifferent_access,
+      attributes: {name: "AI Salad", meal: "lunch", calories: 350, note: "ok"}.with_indifferent_access,
       error_message: nil,
       model: "test"
     )
@@ -92,15 +92,15 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     with_stubbed_instance_method(FoodPhotoAnalyzer, :call, -> { fake }) do
       assert_difference("CalorieEntry.count", 1) do
         post log_entries_path(date: date),
-             params: {
-               run_ai_analysis: "1",
-               user_description: "no dressing",
-               calorie_entry: {
-                 image: fixture_file_upload("one_pixel.png", "image/png")
-               }
-             },
-             as: :multipart,
-             headers: { "Accept" => Mime[:turbo_stream].to_s }
+          params: {
+            run_ai_analysis: "1",
+            user_description: "no dressing",
+            calorie_entry: {
+              image: fixture_file_upload("one_pixel.png", "image/png")
+            }
+          },
+          as: :multipart,
+          headers: {"Accept" => Mime[:turbo_stream].to_s}
       end
     end
 
@@ -120,14 +120,14 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     with_stubbed_instance_method(FoodPhotoAnalyzer, :call, ->(*) { flunk("AI should not run without an image") }) do
       assert_difference("CalorieEntry.count", 1) do
         post log_entries_path(date: date),
-             params: {
-               run_ai_analysis: "1",
-               calorie_entry: {
-                 name: "Manual",
-                 meal: "breakfast",
-                 calories: 220
-               }
-             }
+          params: {
+            run_ai_analysis: "1",
+            calorie_entry: {
+              name: "Manual",
+              meal: "breakfast",
+              calories: 220
+            }
+          }
       end
     end
 
@@ -140,15 +140,15 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     with_stubbed_instance_method(FoodPhotoAnalyzer, :call, ->(*) { flunk("AI should not run for manual photo flow") }) do
       assert_difference("CalorieEntry.count", 1) do
         post log_entries_path(date: date),
-             params: {
-               run_ai_analysis: "0",
-               user_description: "leftovers",
-               calorie_entry: {
-                 image: fixture_file_upload("one_pixel.png", "image/png")
-               }
-             },
-             as: :multipart,
-             headers: { "Accept" => Mime[:turbo_stream].to_s }
+          params: {
+            run_ai_analysis: "0",
+            user_description: "leftovers",
+            calorie_entry: {
+              image: fixture_file_upload("one_pixel.png", "image/png")
+            }
+          },
+          as: :multipart,
+          headers: {"Accept" => Mime[:turbo_stream].to_s}
       end
     end
 
@@ -169,20 +169,20 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
       meal: :other,
       state: :draft,
       name: "Temp",
-      ai_metadata: { "analysis_status" => "completed" }
+      ai_metadata: {"analysis_status" => "completed"}
     )
 
     patch log_entry_path(date, draft),
-          params: {
-            calorie_entry: {
-              state: "final",
-              name: "Temp",
-              meal: "lunch",
-              calories: 400,
-              note: ""
-            }
-          },
-          headers: { "Accept" => Mime[:turbo_stream].to_s }
+      params: {
+        calorie_entry: {
+          state: "final",
+          name: "Temp",
+          meal: "lunch",
+          calories: 400,
+          note: ""
+        }
+      },
+      headers: {"Accept" => Mime[:turbo_stream].to_s}
 
     assert_response :success
     draft.reload
@@ -221,7 +221,7 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
 
     assert_difference("CalorieEntry.count", -1) do
       delete delete_log_calorie_entry_path(date, entry),
-             headers: { "Accept" => Mime[:turbo_stream].to_s }
+        headers: {"Accept" => Mime[:turbo_stream].to_s}
     end
 
     assert_response :success
@@ -241,15 +241,15 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     )
 
     patch log_entry_path(date, entry),
-          params: {
-            calorie_entry: {
-              name: "Big salad",
-              meal: "lunch",
-              calories: 280,
-              note: ""
-            }
-          },
-          headers: { "Accept" => Mime[:turbo_stream].to_s }
+      params: {
+        calorie_entry: {
+          name: "Big salad",
+          meal: "lunch",
+          calories: 280,
+          note: ""
+        }
+      },
+      headers: {"Accept" => Mime[:turbo_stream].to_s}
 
     assert_response :success
     assert_not_includes response.body, 'turbo-stream action="append" target="entries"'

@@ -6,12 +6,12 @@ class CalorieEntry < ApplicationRecord
 
   has_one_attached :image
 
-  enum :meal, { breakfast: 0, lunch: 1, dinner: 2, snack: 3, other: 4 }
-  enum :state, { draft: 0, final: 1 }, default: :draft
+  enum :meal, {breakfast: 0, lunch: 1, dinner: 2, snack: 3, other: 4}
+  enum :state, {draft: 0, final: 1}, default: :draft
 
   validates :eaten_on, presence: true
-  validates :calories, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, if: :final?
-  validates :name, length: { maximum: 80 }, allow_blank: true
+  validates :calories, presence: true, numericality: {only_integer: true, greater_than_or_equal_to: 0}, if: :final?
+  validates :name, length: {maximum: 80}, allow_blank: true
   validate :image_type_and_size, if: -> { image.attached? }
   validate :no_revert_from_final_to_draft
 
@@ -30,7 +30,7 @@ class CalorieEntry < ApplicationRecord
     return unless image.attached? && draft?
 
     analysis = image.blob.open do |file|
-      result = FoodPhotoAnalyzer.new(
+      FoodPhotoAnalyzer.new(
         image_path: file.path,
         user_description: note
       ).call

@@ -20,14 +20,25 @@ class FoodPhotoAnalyzerTest < ActiveSupport::TestCase
     })
 
     fake_chat = Object.new
-    def fake_chat.with_model(*) self end
-    def fake_chat.with_schema(*) self end
-    def fake_chat.with_instructions(*) self end
-    def fake_chat.ask(*, **) @response end
+    def fake_chat.with_model(*)
+      self
+    end
+
+    def fake_chat.with_schema(*)
+      self
+    end
+
+    def fake_chat.with_instructions(*)
+      self
+    end
+
+    def fake_chat.ask(*, **)
+      @response
+    end
     fake_chat.instance_variable_set(:@response, response)
 
     with_stubbed_class_method(RubyLLM, :chat, ->(*) { fake_chat }) do
-      Tempfile.create([ "meal", ".png" ]) do |f|
+      Tempfile.create(["meal", ".png"]) do |f|
         f.binmode
         f.write(File.binread(png))
         f.rewind
