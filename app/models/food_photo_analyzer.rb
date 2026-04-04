@@ -11,6 +11,8 @@ class FoodPhotoAnalyzer
     If the meal time is unclear, use other for meal.
   TEXT
 
+  OUTPUT_SCHEMA = MealSuggestionSchema
+
   def initialize(image_path:, user_description: nil, model_id: nil)
     @image_path = image_path
     @user_description = user_description
@@ -22,21 +24,15 @@ class FoodPhotoAnalyzer
       return Result.new(success: false, attributes: {}, error_message: "Image file is not available.", model: nil)
     end
 
-    chat = RubyLLM.chat
-    chat = chat.with_model(@model_id) if @model_id.present?
-
-    response = chat
-      .with_schema(MealSuggestionSchema)
-      .with_instructions(SYSTEM_INSTRUCTIONS)
-      .ask(@user_description, with: @image_path)
+    response = llm_chat.ask(@user_description, with: @image_path)
     Result.new(
       success: true,
-      attributes: response.content.with_indifferent_access,
+      attributes: OUTPUT_SCHEMA.serialize_output(response.content),
       error_message: nil,
       model: model_id
     )
   rescue RubyLLM::Error, Faraday::Error, IOError, SystemCallError => e
-    Result.new(success: false, attributes: {}, error_message: safe_error(e), model: model_id)
+    Result.new(success: false, attributes: nil, error_message: safe_error(e), model: model_id)
   end
 
   def model_id
@@ -44,6 +40,18 @@ class FoodPhotoAnalyzer
   end
 
   private
+
+  # separate llm_client and llm_chat for stubbing with fake client in tests
+  # could move to an initialization param if needed
+  def llm_client
+    RubyLLM.chat
+  end
+
+  def llm_chat
+    chat = llm_client
+    chat = chat.with_model(@model_id) if @model_id.present?
+    chat.with_schema(OUTPUT_SCHEMA).with_instructions(SYSTEM_INSTRUCTIONS)
+  end
 
   def safe_error(error)
     Rails.logger.warn("[FoodPhotoAnalyzer] #{error.class}: #{error.message}")

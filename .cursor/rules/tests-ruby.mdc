@@ -1,24 +1,60 @@
 ---
-description: Minitest, request tests, and system tests
+description: Rails testing with Minitest—structure, boundaries, and stability
 globs:
   - test/**/*.rb
 alwaysApply: false
 ---
 
-# Tests (Minitest)
+# Rails testing (Minitest)
 
-## Layout
+## Where tests live
 
-- Follow existing structure: `test/models/`, `test/services/`, `test/requests/`, `test/system/`, etc.
-- Use `test_helper.rb` patterns already in the project (fixtures, helpers, Capybara for system tests).
+| Kind | Path | Use for |
+|------|------|--------|
+| Model / unit | `test/models/` | Validations, scopes, enums, instance logic, plain Ruby collaborators |
+| Service-style POROs | `test/services/` (or `test/models/` if colocated) | Objects that orchestrate models or I/O |
+| HTTP / routing | `test/controllers/` or `test/integration/` / `test/requests/` | Status, redirects, assigns, Turbo streams, auth |
+| Jobs | `test/jobs/` | Enqueued behavior, side effects (with `perform_enqueued_jobs` when needed) |
+| Mailers | `test/mailers/` | Headers, bodies, delivery when not default-skipped |
+| Browser | `test/system/` | End-to-end flows; Capybara + real browser (slower, fewer tests) |
 
-## What to cover
+Prefer **request/integration tests** over controller unit tests when exercising the full stack (params → response) matches how the app is used.
 
-- **Models**: validations, key scopes, and state transitions.
-- **Requests / integration**: happy path + one failure path for auth or validation when applicable.
-- **System tests**: critical user flows touching Turbo/Stimulus — keep them stable (explicit waits/assertions Capybara provides, not arbitrary `sleep` unless unavoidable).
+## Design of each test
 
-## Running
+- **One obvious behavior** per test; name tests so failures read like specs (`test "rejects negative calories when final"`).
+- **Arrange / act / assert**—keep setup visible; extract helpers only when it improves clarity.
+- **Do not test the framework** (e.g. that `validates` exists); test **your** rules and branches.
+- Use **`assert_changes` / `assert_no_changes` / `assert_difference`** for counts and attributes instead of manual before/after when it fits.
+- For **time**, use `travel_to` / `freeze_time` helpers so tests are deterministic.
 
-- Unit/integration: `bin/rails test`
-- Browser: `bin/rails test:system` (requires setup; CI runs `db:test:prepare test:system`)
+## Data: fixtures and factories
+
+- This project loads **`fixtures :all`**—prefer fixtures for shared baseline records; add only the rows a test needs via labels or inline creation when fixtures are too heavy.
+- When creating records in a test, use **valid attributes**; avoid relying on implicit DB defaults unless that is what you are testing.
+
+## Boundaries and I/O
+
+- **Stub or fake** at system boundaries (HTTP clients, RubyLLM, payment APIs)—not the code under test. Use thin test doubles; restore behavior in `ensure` or helpers like `with_stubbed_instance_method` in `test_helper.rb`.
+- **Do not** stub the method you are trying to verify unless the test is explicitly about the caller’s reaction to that dependency.
+
+## Request, Turbo, and Hotwire
+
+- Assert **response code**, **flash**, **redirect location**, and **Turbo Stream** bodies (`assert_select` / `response.body`) where the feature matters.
+- Prefer following redirects only when the scenario requires it (`follow_redirect!` in integration tests).
+
+## System tests
+
+- Cover **critical user paths** (happy path + one important failure), not every permutation.
+- Rely on Capybara’s **matching and retrying**; avoid `sleep` except when interacting with something the driver cannot observe (rare).
+- Keep selectors **stable** (`data-testid` or roles) rather than brittle CSS chains.
+
+## Speed and stability
+
+- Avoid unnecessary **full-stack** tests when a request or model test suffices.
+- Keep tests **independent**: no order dependence; do not share mutable class-level state without reset.
+- Match **CI**: `bin/rails test`; use `db:test:prepare` when the schema changed. System tests: `bin/rails test:system`.
+
+## Style
+
+- Follow **Standard** Ruby style; keep helpers in `test_helper.rb` or `test/support/` when reused across many files.
