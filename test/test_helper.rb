@@ -20,6 +20,19 @@ module ActiveSupport
       singleton.send(:define_method, method_name, original)
     end
 
+    def with_stubbed_instance_method(klass, method_name, implementation)
+      klass.class_eval do
+        alias_method :"__stub_orig_#{method_name}", method_name
+        define_method(method_name, implementation)
+      end
+      yield
+    ensure
+      klass.class_eval do
+        alias_method method_name, :"__stub_orig_#{method_name}"
+        remove_method :"__stub_orig_#{method_name}"
+      end
+    end
+
     # Add more helper methods to be used by all tests here...
   end
 end

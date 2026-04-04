@@ -33,7 +33,7 @@
 
     <% if calorie_entry.image.attached? %>
       <div class="flex gap-3 rounded-lg border border-white/10 bg-[#0c0f15] p-3">
-        <%= image_tag calorie_entry.image.variant(resize_to_limit: [160, 160]), class: "h-16 w-16 shrink-0 rounded-md border border-white/10 object-cover" %>
+        <%= image_tag calorie_entry.image, class: "h-16 w-16 shrink-0 rounded-md border border-white/10 object-cover" %>
       </div>
     <% end %>
 
@@ -57,12 +57,21 @@
       <%= form.text_area :note, rows: 3, placeholder: "Optional notes", class: "w-full rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100 placeholder:text-neutral-500 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20" %>
     </div>
 
-    <p>
-      <%= link_to "Back to step 1",
-          new_log_entry_path(date: date),
-          class: "text-sm text-neutral-500 underline decoration-white/15 underline-offset-2 transition hover:text-neutral-300 hover:decoration-white/30",
-          data: { turbo_frame: "entry_form" } %>
-    </p>
+    <% if calorie_entry.persisted? && calorie_entry.final? %>
+      <p>
+        <%= link_to "Cancel",
+            log_calorie_entry_path(date, calorie_entry),
+            class: "text-sm text-neutral-500 underline decoration-white/15 underline-offset-2 transition hover:text-neutral-300 hover:decoration-white/30",
+            data: { turbo_frame: "entry_form" } %>
+      </p>
+    <% elsif calorie_entry.draft? %>
+      <p>
+        <%= link_to "Back to step 1",
+            new_log_entry_path(date: date),
+            class: "text-sm text-neutral-500 underline decoration-white/15 underline-offset-2 transition hover:text-neutral-300 hover:decoration-white/30",
+            data: { turbo_frame: "entry_form" } %>
+      </p>
+    <% end %>
 
     <%= form.submit(calorie_entry.draft? ? "Save to log" : "Save entry", class: "w-full rounded-md border border-white/15 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-neutral-100 transition hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1117] active:scale-[0.99]") %>
   <% end %>

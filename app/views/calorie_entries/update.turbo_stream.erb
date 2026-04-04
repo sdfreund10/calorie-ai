@@ -1,13 +1,24 @@
+<% drawer_title = @calorie_entry.final? ? "Edit entry" : "New entry" %>
 <% if @calorie_entry.errors.any? %>
   <%= turbo_stream.replace "entry_form" do %>
     <%= turbo_frame_tag "entry_form" do %>
+      <%= render "calorie_entries/drawer_chrome", title: drawer_title %>
       <%= render "calorie_entries/form", calorie_entry: @calorie_entry, date: @date %>
     <% end %>
   <% end %>
-<% else %>
+<% elsif @just_finalized_from_draft %>
   <%= turbo_stream.append "entries", partial: "calorie_entries/calorie_entry", locals: { calorie_entry: @calorie_entry } %>
   <%= turbo_stream.replace "entry_form" do %>
     <%= turbo_frame_tag "entry_form" do %>
+      <%= render "calorie_entries/drawer_chrome", title: "New entry" %>
+      <%= render "calorie_entries/photo_upload", date: @date, calorie_entry: CalorieEntry.new(eaten_on: @date, meal: :other) %>
+    <% end %>
+  <% end %>
+<% else %>
+  <%= turbo_stream.replace dom_id(@calorie_entry), partial: "calorie_entries/calorie_entry", locals: { calorie_entry: @calorie_entry } %>
+  <%= turbo_stream.replace "entry_form" do %>
+    <%= turbo_frame_tag "entry_form" do %>
+      <%= render "calorie_entries/drawer_chrome", title: "New entry" %>
       <%= render "calorie_entries/photo_upload", date: @date, calorie_entry: CalorieEntry.new(eaten_on: @date, meal: :other) %>
     <% end %>
   <% end %>

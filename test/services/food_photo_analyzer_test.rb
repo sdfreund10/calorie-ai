@@ -2,9 +2,9 @@
 
 require "test_helper"
 
-class MealPhotoSuggestionServiceTest < ActiveSupport::TestCase
+class FoodPhotoAnalyzerTest < ActiveSupport::TestCase
   test "returns failure when image path does not exist" do
-    result = MealPhotoSuggestionService.call(image_path: "/nonexistent/meal.png")
+    result = FoodPhotoAnalyzer.new(image_path: "/nonexistent/meal.png").call
 
     assert_not result.success
     assert_match(/not available/i, result.error_message)
@@ -31,7 +31,7 @@ class MealPhotoSuggestionServiceTest < ActiveSupport::TestCase
         f.binmode
         f.write(File.binread(png))
         f.rewind
-        result = MealPhotoSuggestionService.new(image_path: f.path, model_id: "gpt-4o-mini").call
+        result = FoodPhotoAnalyzer.new(image_path: f.path, model_id: "gpt-4o-mini").call
 
         assert result.success
         assert_equal "Bowl", result.attributes[:name]

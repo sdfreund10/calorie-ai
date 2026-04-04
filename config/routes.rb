@@ -13,7 +13,9 @@ Rails.application.routes.draw do
 
   get "log/:date", to: "logs#show", as: :daily_log
   get "log/:date/entries/new", to: "calorie_entries#new", as: :new_log_entry
-  # get "log/:date/entries/details", to: "calorie_entries#details", as: :log_entry_details
+  get "log/:date/entries/:id/edit", to: "calorie_entries#edit", as: :edit_log_calorie_entry
+  get "log/:date/entries/:id", to: "calorie_entries#show", as: :log_calorie_entry
   post "log/:date/entries", to: "calorie_entries#create", as: :log_entries
   patch "log/:date/entries/:id", to: "calorie_entries#update", as: :log_entry
+  delete "log/:date/entries/:id", to: "calorie_entries#destroy", as: :delete_log_calorie_entry
 end
