@@ -115,15 +115,6 @@ class CalorieEntriesController < ApplicationController
     @run_ai_analysis && image_param_present?
   end
 
-  def post_create_ai_metadata!(entry, user_description)
-    if ai_flow_requested?
-      entry.analyze!
-    elsif @run_ai_analysis && !image_param_present?
-      entry.merge_ai_metadata!("analysis_status" => "skipped")
-      entry.save!
-    end
-  end
-
   def redirect_after_create
     if @calorie_entry.draft?
       redirect_to daily_log_path(@date), notice: "Draft ready - review and save."

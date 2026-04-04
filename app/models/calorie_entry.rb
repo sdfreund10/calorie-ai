@@ -22,10 +22,6 @@ class CalorieEntry < ApplicationRecord
   store_accessor :ai_metadata, :analysis_status, :error_message, :suggestions, :model
   before_create :set_defaults
 
-  def merge_ai_metadata!(attrs)
-    self.ai_metadata = (ai_metadata || {}).stringify_keys.merge(attrs.stringify_keys)
-  end
-
   def analyze!
     return unless image.attached? && draft?
 
@@ -38,11 +34,14 @@ class CalorieEntry < ApplicationRecord
 
     if analysis.success
       self.analysis_status = "completed"
-      self.suggestions = analysis.attributes.stringify_keys
+      self.suggestions = analysis.attributes.to_h
       self.error_message = nil
-      self.name = analysis.attributes[:name]
-      self.calories = analysis.attributes[:calories]
-      self.note += "\n✨ AI Analysis ✨\n#{analysis.attributes[:note]}" if analysis.attributes[:note].present?
+      self.name = analysis.attributes.name
+      self.calories = analysis.attributes.calories
+      if analysis.attributes.note.present?
+        ai_suffix = "✨ AI Analysis ✨\n#{analysis.attributes.note}"
+        self.note = note.present? ? "#{note}\n#{ai_suffix}" : ai_suffix
+      end
     else
       self.analysis_status = "failed"
       self.error_message = analysis.error_message

@@ -82,14 +82,9 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
 
   test "run_ai_analysis with image creates draft and calls analyzer" do
     date = Date.new(2026, 4, 6)
-    fake = FoodPhotoAnalyzer::Result.new(
-      success: true,
-      attributes: {name: "AI Salad", meal: "lunch", calories: 350, note: "ok"}.with_indifferent_access,
-      error_message: nil,
-      model: "test"
-    )
-
-    with_stubbed_instance_method(FoodPhotoAnalyzer, :call, -> { fake }) do
+    stub_food_photo_analyzer_call(
+      content: {name: "AI Salad", meal: "lunch", calories: 350, note: "ok"}
+    ) do
       assert_difference("CalorieEntry.count", 1) do
         post log_entries_path(date: date),
           params: {
@@ -117,7 +112,7 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
 
   test "run_ai_analysis without image does not call analyzer" do
     date = Date.new(2026, 4, 7)
-    with_stubbed_instance_method(FoodPhotoAnalyzer, :call, ->(*) { flunk("AI should not run without an image") }) do
+    refute_food_photo_analyzer_called("AI should not run without an image") do
       assert_difference("CalorieEntry.count", 1) do
         post log_entries_path(date: date),
           params: {
@@ -137,7 +132,7 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
 
   test "image without run_ai_analysis creates draft without calling analyzer" do
     date = Date.new(2026, 4, 9)
-    with_stubbed_instance_method(FoodPhotoAnalyzer, :call, ->(*) { flunk("AI should not run for manual photo flow") }) do
+    refute_food_photo_analyzer_called("AI should not run for manual photo flow") do
       assert_difference("CalorieEntry.count", 1) do
         post log_entries_path(date: date),
           params: {
