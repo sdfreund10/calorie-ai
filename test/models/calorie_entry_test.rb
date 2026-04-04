@@ -61,4 +61,35 @@ class CalorieEntryTest < ActiveSupport::TestCase
     assert entry.snack?
     assert_includes CalorieEntry.snack, entry
   end
+
+  test "finalized scope excludes draft entries" do
+    final = CalorieEntry.create!(eaten_on: Date.current, calories: 300, meal: :lunch, state: :final)
+    draft = CalorieEntry.create!(eaten_on: Date.current, calories: 1, meal: :other, state: :draft, name: "Draft only")
+
+    assert_includes CalorieEntry.finalized, final
+    assert_not_includes CalorieEntry.finalized, draft
+  end
+
+  test "draft entries skip calories validation for final-only rule when not final" do
+    entry = CalorieEntry.new(eaten_on: Date.current, calories: 1, meal: :other, state: :draft)
+
+    assert entry.valid?
+  end
+
+  test "cannot revert from final to draft" do
+    entry = CalorieEntry.create!(eaten_on: Date.current, calories: 200, meal: :dinner, state: :final)
+
+    entry.state = :draft
+    assert_not entry.valid?
+    assert_includes entry.errors[:state], "cannot change from final to draft"
+  end
+
+  test "merge_ai_metadata merges string keys" do
+    entry = CalorieEntry.new(eaten_on: Date.current, calories: 100, meal: :breakfast, state: :final)
+    entry.merge_ai_metadata!("analysis_status" => "skipped")
+    entry.merge_ai_metadata!("user_description" => "hello")
+
+    assert_equal "skipped", entry.ai_metadata["analysis_status"]
+    assert_equal "hello", entry.ai_metadata["user_description"]
+  end
 end

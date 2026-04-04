@@ -1,41 +1,69 @@
-<%= form_with model: calorie_entry, url: log_entries_path(date: date), class: "space-y-3", data: { action: "turbo:submit-end->drawer#submitted" } do |form| %>
-  <%= form.hidden_field :eaten_on, value: date %>
+<%# Step 2 only: no image upload. Draft finalize uses PATCH; skip path uses POST create. %>
+<% entry_form_url = calorie_entry.persisted? ? log_entry_path(date, calorie_entry) : log_entries_path(date: date) %>
+<div class="space-y-4">
+  <nav class="flex gap-2 text-xs text-neutral-500" aria-label="Steps">
+    <span>1 Photo</span>
+    <span class="text-neutral-600" aria-hidden="true">·</span>
+    <span class="font-medium text-neutral-200">2 Details</span>
+  </nav>
 
-  <% if calorie_entry.errors.any? %>
-    <div class="rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-sm text-red-200">
-      <p class="font-semibold">Could not save entry:</p>
-      <ul class="mt-1 list-disc pl-5">
-        <% calorie_entry.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
+  <%= form_with model: calorie_entry, url: entry_form_url, class: "space-y-3", data: { action: "turbo:submit-end->drawer#submitted" } do |form| %>
+    <%= form.hidden_field :eaten_on, value: date %>
+    <% if calorie_entry.draft? %>
+      <%= form.hidden_field :state, value: "final" %>
+    <% end %>
+
+    <% if calorie_entry.errors.any? %>
+      <div class="rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-sm text-red-200">
+        <p class="font-semibold">Could not save entry:</p>
+        <ul class="mt-1 list-disc pl-5">
+          <% calorie_entry.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <% ai_meta = calorie_entry.ai_metadata || {} %>
+    <% if calorie_entry.draft? && ai_meta["error_message"].present? %>
+      <p class="rounded-md border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-sm text-amber-100">
+        AI analysis: <%= ai_meta["error_message"] %>
+      </p>
+    <% end %>
+
+    <% if calorie_entry.image.attached? %>
+      <div class="flex gap-3 rounded-lg border border-white/10 bg-[#0c0f15] p-3">
+        <%= image_tag calorie_entry.image.variant(resize_to_limit: [160, 160]), class: "h-16 w-16 shrink-0 rounded-md border border-white/10 object-cover" %>
+      </div>
+    <% end %>
+
+    <div>
+      <%= form.label :name, class: "mb-1 block text-sm font-medium text-neutral-300" %>
+      <%= form.text_field :name, placeholder: "Dish name", class: "w-full rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100 placeholder:text-neutral-500 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20" %>
     </div>
+
+    <div>
+      <%= form.label :meal, class: "mb-1 block text-sm font-medium text-neutral-300" %>
+      <%= form.select :meal, CalorieEntry.meals.keys.map { |meal| [meal.humanize, meal] }, {}, class: "w-full rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20" %>
+    </div>
+
+    <div>
+      <%= form.label :calories, class: "mb-1 block text-sm font-medium text-neutral-300" %>
+      <%= form.number_field :calories, min: 1, step: 1, placeholder: "e.g. 450", class: "w-full rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100 placeholder:text-neutral-500 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20" %>
+    </div>
+
+    <div>
+      <%= form.label :note, class: "mb-1 block text-sm font-medium text-neutral-300" %>
+      <%= form.text_area :note, rows: 3, placeholder: "Optional notes", class: "w-full rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100 placeholder:text-neutral-500 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20" %>
+    </div>
+
+    <p>
+      <%= link_to "Back to step 1",
+          new_log_entry_path(date: date),
+          class: "text-sm text-neutral-500 underline decoration-white/15 underline-offset-2 transition hover:text-neutral-300 hover:decoration-white/30",
+          data: { turbo_frame: "entry_form" } %>
+    </p>
+
+    <%= form.submit(calorie_entry.draft? ? "Save to log" : "Save entry", class: "w-full rounded-md border border-white/15 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-neutral-100 transition hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1117] active:scale-[0.99]") %>
   <% end %>
-
-  <div>
-    <%= form.label :name, class: "mb-1 block text-sm font-medium text-neutral-300" %>
-    <%= form.text_field :name, placeholder: "Dish name", class: "w-full rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100 placeholder:text-neutral-500 focus:border-blue-400/40 focus:outline-none focus:ring-1 focus:ring-blue-400/25" %>
-  </div>
-
-  <div>
-    <%= form.label :meal, class: "mb-1 block text-sm font-medium text-neutral-300" %>
-    <%= form.select :meal, CalorieEntry.meals.keys.map { |meal| [meal.humanize, meal] }, {}, class: "w-full rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100 focus:border-blue-400/40 focus:outline-none focus:ring-1 focus:ring-blue-400/25" %>
-  </div>
-
-  <div>
-    <%= form.label :calories, class: "mb-1 block text-sm font-medium text-neutral-300" %>
-    <%= form.number_field :calories, min: 1, step: 1, placeholder: "e.g. 450", class: "w-full rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100 placeholder:text-neutral-500 focus:border-blue-400/40 focus:outline-none focus:ring-1 focus:ring-blue-400/25" %>
-  </div>
-
-  <div>
-    <%= form.label :note, class: "mb-1 block text-sm font-medium text-neutral-300" %>
-    <%= form.text_area :note, rows: 3, placeholder: "Optional notes", class: "w-full rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100 placeholder:text-neutral-500 focus:border-blue-400/40 focus:outline-none focus:ring-1 focus:ring-blue-400/25" %>
-  </div>
-
-  <div>
-    <%= form.label :image, class: "mb-1 block text-sm font-medium text-neutral-300" %>
-    <%= form.file_field :image, accept: "image/*", class: "w-full rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2 text-sm text-neutral-300 file:mr-3 file:rounded-md file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-neutral-100 hover:file:bg-white/15" %>
-  </div>
-
-  <%= form.submit "Save entry", class: "w-full rounded-md border border-white/15 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-neutral-100 transition hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f1117] active:scale-[0.99]" %>
-<% end %>
+</div>

@@ -1,16 +1,6 @@
 <% if @calorie_entry.errors.any? %>
   <%= turbo_stream.replace "entry_form" do %>
     <%= turbo_frame_tag "entry_form" do %>
-      <% if @entry_from_photo_step %>
-        <%= render "calorie_entries/photo_upload", date: @date, calorie_entry: @calorie_entry %>
-      <% else %>
-        <%= render "calorie_entries/form", calorie_entry: @calorie_entry, date: @date %>
-      <% end %>
-    <% end %>
-  <% end %>
-<% elsif @calorie_entry.draft? %>
-  <%= turbo_stream.replace "entry_form" do %>
-    <%= turbo_frame_tag "entry_form" do %>
       <%= render "calorie_entries/form", calorie_entry: @calorie_entry, date: @date %>
     <% end %>
   <% end %>

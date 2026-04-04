@@ -11,6 +11,5 @@ class CreateCalorieEntries < ActiveRecord::Migration[8.1]
 
     add_index :calorie_entries, :eaten_on
     add_index :calorie_entries, %i[eaten_on created_at]
-    add_check_constraint :calorie_entries, "calories > 0", name: "calorie_entries_calories_positive"
   end
 end

@@ -73,7 +73,10 @@
       </div>
 
       <%= turbo_frame_tag "entry_form" do %>
-        <%= render "calorie_entries/form", calorie_entry: @calorie_entry, date: @date %>
+        <%# Step 1 is the same as "New" %>
+        <%# Step 2 is the same as "Update" %>
+        <%# Cannot cleanly replace as of now, because rendering partials. Maybe this could be a lazy-loaded turo frame pointing to new action %>
+        <%= render "calorie_entries/photo_upload", date: @date, calorie_entry: @calorie_entry %>
       <% end %>
     </aside>
   </div>
