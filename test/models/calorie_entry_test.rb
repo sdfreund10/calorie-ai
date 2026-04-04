@@ -26,13 +26,15 @@ class CalorieEntryTest < ActiveSupport::TestCase
     assert_includes entry.errors[:eaten_on], "can't be blank"
   end
 
-  test "requires calories to be a positive integer" do
-    zero_calorie_entry = CalorieEntry.new(eaten_on: Date.current, calories: 0)
-    decimal_calorie_entry = CalorieEntry.new(eaten_on: Date.current, calories: 123.5)
+  test "requires final entries to have integer calories and not be negative" do
+    zero_ok = CalorieEntry.new(eaten_on: Date.current, calories: 0, state: :final)
+    assert zero_ok.valid?
 
-    assert_not zero_calorie_entry.valid?
-    assert_includes zero_calorie_entry.errors[:calories], "must be greater than 0"
+    negative = CalorieEntry.new(eaten_on: Date.current, calories: -1, state: :final)
+    assert_not negative.valid?
+    assert_includes negative.errors[:calories], "must be greater than or equal to 0"
 
+    decimal_calorie_entry = CalorieEntry.new(eaten_on: Date.current, calories: 123.5, state: :final)
     assert_not decimal_calorie_entry.valid?
     assert_includes decimal_calorie_entry.errors[:calories], "must be an integer"
   end

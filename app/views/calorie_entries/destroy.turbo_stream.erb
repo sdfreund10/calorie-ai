@@ -1,0 +1,7 @@
+<%= turbo_stream.remove dom_id(@calorie_entry) %>
+<%= turbo_stream.replace "entry_form" do %>
+  <%= turbo_frame_tag "entry_form" do %>
+    <%= render "calorie_entries/drawer_chrome", title: "New entry" %>
+    <%= render "calorie_entries/photo_upload", date: @date, calorie_entry: CalorieEntry.new(eaten_on: @date, meal: :other) %>
+  <% end %>
+<% end %>

@@ -3,8 +3,8 @@ require "test_helper"
 class DailyLogFlowTest < ActionDispatch::IntegrationTest
   test "shows entries for a given day only" do
     date = Date.new(2026, 4, 1)
-    CalorieEntry.create!(eaten_on: date, calories: 510, name: "Chicken bowl", meal: :lunch)
-    CalorieEntry.create!(eaten_on: date - 1, calories: 200, name: "Toast", meal: :breakfast)
+    CalorieEntry.create!(eaten_on: date, calories: 510, name: "Chicken bowl", meal: :lunch, state: :final)
+    CalorieEntry.create!(eaten_on: date - 1, calories: 200, name: "Toast", meal: :breakfast, state: :final)
 
     get daily_log_path(date)
 
@@ -17,6 +17,15 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     get daily_log_path("bad-date")
 
     assert_redirected_to daily_log_path(Date.current)
+  end
+
+  test "daily log header links to previous and next day" do
+    date = Date.new(2026, 6, 15)
+    get daily_log_path(date)
+
+    assert_response :success
+    assert_select "a[href=?]", daily_log_path(date - 1.day), text: /Previous/
+    assert_select "a[href=?]", daily_log_path(date + 1.day), text: /Next/
   end
 
   test "html create redirects to the same day log" do
@@ -38,7 +47,7 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     assert_redirected_to daily_log_path(date)
   end
 
-  test "turbo create appends entry and replaces form frame" do
+  test "turbo create without finalize keeps draft and replaces form frame" do
     date = Date.new(2026, 4, 2)
 
     post log_entries_path(date: date),
@@ -53,8 +62,11 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal Mime[:turbo_stream].to_s, response.media_type
-    assert_includes response.body, 'turbo-stream action="append" target="entries"'
+    assert_not_includes response.body, 'turbo-stream action="append" target="entries"'
     assert_includes response.body, 'turbo-stream action="replace" target="entry_form"'
+
+    entry = CalorieEntry.order(:created_at).last
+    assert entry.draft?
   end
 
   test "draft entries are hidden from daily log" do
@@ -68,15 +80,16 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Hidden draft"
   end
 
-  test "run_ai_analysis with image creates draft and calls suggestion service" do
+  test "run_ai_analysis with image creates draft and calls analyzer" do
     date = Date.new(2026, 4, 6)
-    fake = MealPhotoSuggestionService::Result.new(
+    fake = FoodPhotoAnalyzer::Result.new(
       success: true,
-      attributes: { name: "AI Salad", meal: "lunch", calories: 350, note: "ok" },
-      error_message: nil
+      attributes: { name: "AI Salad", meal: "lunch", calories: 350, note: "ok" }.with_indifferent_access,
+      error_message: nil,
+      model: "test"
     )
 
-    with_stubbed_class_method(MealPhotoSuggestionService, :call, ->(*, **) { fake }) do
+    with_stubbed_instance_method(FoodPhotoAnalyzer, :call, -> { fake }) do
       assert_difference("CalorieEntry.count", 1) do
         post log_entries_path(date: date),
              params: {
@@ -93,18 +106,18 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
 
     entry = CalorieEntry.order(:created_at).last
     assert entry.draft?
-    assert_equal "completed", entry.ai_metadata["analysis_status"]
+    assert_equal "completed", entry.analysis_status
     assert_equal "AI Salad", entry.name
     assert_equal 350, entry.calories
-    assert_equal "no dressing", entry.ai_metadata["user_description"]
+    assert_includes entry.note.to_s, "no dressing"
     assert_response :success
     assert_includes response.body, 'turbo-stream action="replace" target="entry_form"'
     assert_not_includes response.body, 'turbo-stream action="append" target="entries"'
   end
 
-  test "run_ai_analysis without image skips AI and creates final entry" do
+  test "run_ai_analysis without image does not call analyzer" do
     date = Date.new(2026, 4, 7)
-    with_stubbed_class_method(MealPhotoSuggestionService, :call, ->(*) { flunk("AI service should not run without an image") }) do
+    with_stubbed_instance_method(FoodPhotoAnalyzer, :call, ->(*) { flunk("AI should not run without an image") }) do
       assert_difference("CalorieEntry.count", 1) do
         post log_entries_path(date: date),
              params: {
@@ -119,14 +132,12 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     end
 
     entry = CalorieEntry.order(:created_at).last
-    assert entry.final?
-    assert_equal "skipped", entry.ai_metadata["analysis_status"]
+    assert entry.draft?
   end
 
-
-  test "image without run_ai_analysis creates draft without calling suggestion service" do
+  test "image without run_ai_analysis creates draft without calling analyzer" do
     date = Date.new(2026, 4, 9)
-    with_stubbed_class_method(MealPhotoSuggestionService, :call, ->(*) { flunk("AI service should not run for manual photo flow") }) do
+    with_stubbed_instance_method(FoodPhotoAnalyzer, :call, ->(*) { flunk("AI should not run for manual photo flow") }) do
       assert_difference("CalorieEntry.count", 1) do
         post log_entries_path(date: date),
              params: {
@@ -144,7 +155,7 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     entry = CalorieEntry.order(:created_at).last
     assert entry.draft?
     assert entry.image.attached?
-    assert_equal "leftovers", entry.ai_metadata["user_description"]
+    assert_includes entry.note.to_s, "leftovers"
     assert_response :success
     assert_includes response.body, 'turbo-stream action="replace" target="entry_form"'
     assert_not_includes response.body, 'turbo-stream action="append" target="entries"'
@@ -177,5 +188,74 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     draft.reload
     assert draft.final?
     assert_includes response.body, 'turbo-stream action="append" target="entries"'
+  end
+
+  test "show entry renders turbo frame with details" do
+    date = Date.new(2026, 4, 11)
+    entry = CalorieEntry.create!(
+      eaten_on: date,
+      calories: 400,
+      name: "Rice bowl",
+      meal: :lunch,
+      state: :final,
+      note: "extra veggies"
+    )
+
+    get log_calorie_entry_path(date, entry)
+
+    assert_response :success
+    assert_includes response.body, "Entry details"
+    assert_includes response.body, "Rice bowl"
+    assert_includes response.body, "extra veggies"
+  end
+
+  test "destroy removes entry and resets drawer frame" do
+    date = Date.new(2026, 4, 12)
+    entry = CalorieEntry.create!(
+      eaten_on: date,
+      calories: 300,
+      name: "Soup",
+      meal: :dinner,
+      state: :final
+    )
+
+    assert_difference("CalorieEntry.count", -1) do
+      delete delete_log_calorie_entry_path(date, entry),
+             headers: { "Accept" => Mime[:turbo_stream].to_s }
+    end
+
+    assert_response :success
+    assert_includes response.body, %(action="remove")
+    assert_includes response.body, %(target="#{dom_id(entry)}")
+    assert_includes response.body, 'turbo-stream action="replace" target="entry_form"'
+  end
+
+  test "updating a final entry replaces the row without appending" do
+    date = Date.new(2026, 4, 13)
+    entry = CalorieEntry.create!(
+      eaten_on: date,
+      calories: 250,
+      name: "Salad",
+      meal: :lunch,
+      state: :final
+    )
+
+    patch log_entry_path(date, entry),
+          params: {
+            calorie_entry: {
+              name: "Big salad",
+              meal: "lunch",
+              calories: 280,
+              note: ""
+            }
+          },
+          headers: { "Accept" => Mime[:turbo_stream].to_s }
+
+    assert_response :success
+    assert_not_includes response.body, 'turbo-stream action="append" target="entries"'
+    assert_includes response.body, %(action="replace" target="#{dom_id(entry)}")
+    entry.reload
+    assert_equal "Big salad", entry.name
+    assert_equal 280, entry.calories
   end
 end

@@ -9,6 +9,26 @@ class CalorieEntriesController < ApplicationController
     render layout: false
   end
 
+  def show
+    @date = parse_date(params[:date])
+    return redirect_to(daily_log_path(Date.current), alert: "Invalid date format.") if @date.nil?
+
+    @calorie_entry = CalorieEntry.find(params[:id])
+    return redirect_to(daily_log_path(@date), alert: "Entry not found for this day.") unless @calorie_entry.eaten_on == @date
+
+    render layout: false
+  end
+
+  def edit
+    @date = parse_date(params[:date])
+    return redirect_to(daily_log_path(Date.current), alert: "Invalid date format.") if @date.nil?
+
+    @calorie_entry = CalorieEntry.find(params[:id])
+    return redirect_to(daily_log_path(@date), alert: "Entry not found for this day.") unless @calorie_entry.eaten_on == @date
+
+    render layout: false
+  end
+
   def create
     @date = parse_date(params[:date])
     return redirect_to(daily_log_path(Date.current), alert: "Invalid date format.") if @date.nil?
@@ -45,9 +65,11 @@ class CalorieEntriesController < ApplicationController
       return redirect_to(daily_log_path(@date), alert: "Entry not found for this day.")
     end
 
+    was_draft = @calorie_entry.draft?
     @calorie_entry.assign_attributes(calorie_entry_update_params)
 
     if @calorie_entry.save
+      @just_finalized_from_draft = was_draft && @calorie_entry.final?
       respond_to do |format|
         format.turbo_stream
         format.html { redirect_to daily_log_path(@date), notice: "Entry saved." }
@@ -59,6 +81,22 @@ class CalorieEntriesController < ApplicationController
           redirect_to daily_log_path(@date), alert: @calorie_entry.errors.full_messages.to_sentence
         end
       end
+    end
+  end
+
+  def destroy
+    @date = parse_date(params[:date])
+    return redirect_to(daily_log_path(Date.current), alert: "Invalid date format.") if @date.nil?
+
+    @calorie_entry = CalorieEntry.find(params[:id])
+    unless @calorie_entry.eaten_on == @date
+      return redirect_to(daily_log_path(@date), alert: "Entry not found for this day.")
+    end
+
+    @calorie_entry.destroy!
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to daily_log_path(@date), notice: "Entry deleted." }
     end
   end
 

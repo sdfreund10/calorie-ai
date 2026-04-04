@@ -19,7 +19,7 @@ class FoodPhotoAnalyzer
 
   def call
     unless File.file?(@image_path)
-      return Result.new(success: false, attributes: {}, error_message: "Image file is not available.")
+      return Result.new(success: false, attributes: {}, error_message: "Image file is not available.", model: nil)
     end
 
     chat = RubyLLM.chat
@@ -33,7 +33,8 @@ class FoodPhotoAnalyzer
       success: true,
       attributes: response.content.with_indifferent_access,
       error_message: nil,
-      model: model_id)
+      model: model_id
+    )
   rescue RubyLLM::Error, Faraday::Error, IOError, SystemCallError => e
     Result.new(success: false, attributes: {}, error_message: safe_error(e), model: model_id)
   end
@@ -45,7 +46,7 @@ class FoodPhotoAnalyzer
   private
 
   def safe_error(error)
-    Rails.logger.warn("[MealPhotoSuggestionService] #{error.class}: #{error.message}")
+    Rails.logger.warn("[FoodPhotoAnalyzer] #{error.class}: #{error.message}")
     "Could not analyze the photo. Please try again or enter details manually."
   end
 end

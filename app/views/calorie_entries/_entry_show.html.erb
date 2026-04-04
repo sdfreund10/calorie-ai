@@ -1,0 +1,57 @@
+<%# Read-only detail view; mirrors _form field order and spacing. locals: calorie_entry, date %>
+<div class="space-y-4">
+  <nav class="flex gap-2 text-xs text-neutral-500" aria-label="Steps">
+    <span>1 Photo</span>
+    <span class="text-neutral-600" aria-hidden="true">·</span>
+    <span class="font-medium text-neutral-200">2 Details</span>
+  </nav>
+
+  <% ai_meta = calorie_entry.ai_metadata || {} %>
+  <% if calorie_entry.draft? && ai_meta["error_message"].present? %>
+    <p class="rounded-md border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-sm text-amber-100">
+      AI analysis: <%= ai_meta["error_message"] %>
+    </p>
+  <% end %>
+
+  <% if calorie_entry.image.attached? %>
+    <div class="flex gap-3 rounded-lg border border-white/10 bg-[#0c0f15] p-3">
+      <%= image_tag calorie_entry.image, class: "h-16 w-16 shrink-0 rounded-md border border-white/10 object-cover" %>
+    </div>
+  <% end %>
+
+  <div class="space-y-3">
+    <div>
+      <p class="mb-1 text-sm font-medium text-neutral-300">Name</p>
+      <p class="rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100"><%= calorie_entry.name.presence || "—" %></p>
+    </div>
+
+    <div>
+      <p class="mb-1 text-sm font-medium text-neutral-300">Meal</p>
+      <p class="rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100"><%= calorie_entry.meal.humanize %></p>
+    </div>
+
+    <div>
+      <p class="mb-1 text-sm font-medium text-neutral-300">Calories</p>
+      <p class="rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100 tabular-nums"><%= calorie_entry.calories %></p>
+    </div>
+
+    <div>
+      <p class="mb-1 text-sm font-medium text-neutral-300">Note</p>
+      <p class="min-h-[4.5rem] whitespace-pre-wrap rounded-md border border-white/10 bg-[#0c0f15] px-3 py-2.5 text-base text-neutral-100"><%= calorie_entry.note.presence || "—" %></p>
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <%= link_to "Edit",
+        edit_log_calorie_entry_path(date, calorie_entry),
+        class: "inline-flex justify-center rounded-md border border-white/15 bg-white/[0.06] px-4 py-2.5 text-center text-sm font-semibold text-neutral-100 transition hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 sm:flex-1",
+        data: { turbo_frame: "entry_form" } %>
+
+    <%= button_to "Delete",
+        delete_log_calorie_entry_path(date, calorie_entry),
+        method: :delete,
+        data: { turbo_confirm: "Delete this entry?" },
+        form: { data: { action: "turbo:submit-end->drawer#submitted" } },
+        class: "inline-flex w-full justify-center rounded-md border border-red-900/50 bg-red-950/20 px-4 py-2.5 text-sm font-semibold text-red-200 transition hover:border-red-800/60 hover:bg-red-950/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30 sm:w-auto" %>
+  </div>
+</div>

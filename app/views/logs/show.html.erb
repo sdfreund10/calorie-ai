@@ -1,14 +1,34 @@
 <% content_for :title, "Log for #{@date}" %>
+<% day_nav_link_class = "inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-medium text-neutral-400 underline-offset-2 transition hover:text-neutral-100 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25" %>
+<% day_nav_icon_class = "pointer-events-none h-3.5 w-3.5 shrink-0 opacity-60" %>
 
 <section class="w-full min-h-screen bg-[#080a0f] text-neutral-100" data-controller="drawer" data-action="keydown.esc@window->drawer#close">
   <div class="mx-auto flex min-h-screen w-full max-w-3xl items-start justify-center px-4 py-10 sm:px-6">
     <div class="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0f1117] p-4 sm:p-6">
       <header class="mb-5 border-b border-white/10 pb-5">
-        <p class="text-[11px] uppercase tracking-[0.18em] text-neutral-500">Daily log</p>
+        <div class="flex items-center justify-between gap-3">
+          <p class="min-w-0 truncate text-[11px] uppercase tracking-[0.18em] text-neutral-500">Daily log</p>
+          <nav class="flex w-max max-w-full shrink-0 items-center gap-4" aria-label="Change day">
+            <%= link_to daily_log_path(@date - 1.day), class: day_nav_link_class do %>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="<%= day_nav_icon_class %>" aria-hidden="true">
+                <path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+              </svg>
+              Previous
+            <% end %>
+            <% unless @date == Date.current || @date == "today" %>
+              <%= link_to daily_log_path(@date + 1.day), class: day_nav_link_class do %>
+                Next
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="<%= day_nav_icon_class %>" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                </svg>
+              <% end %>
+            <% end %>
+          </nav>
+        </div>
         <div class="mt-2 flex items-end justify-between gap-3">
           <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl"><%= @date.strftime("%A, %b %-d") %></h1>
           <p class="rounded-md border border-white/10 bg-white/[0.02] px-2.5 py-1 text-xs font-medium text-neutral-300">
-            <%= pluralize(@entries.size, "entry") %>
+            <%= pluralize(@entries.size, "entry") %> · <%= @calorie_total %> cal
           </p>
         </div>
       </header>
@@ -36,46 +56,32 @@
       <% end %>
 
       <div class="sticky bottom-0 mt-6 border-t border-white/10 bg-[#0f1117]/95 pt-4 backdrop-blur">
-        <button
-          type="button"
-          class="w-full rounded-lg border border-white/15 bg-white/[0.06] px-5 py-3 text-sm font-semibold text-neutral-100 transition hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080a0f] active:scale-[0.99]"
-          data-action="drawer#open"
-        >
+        <%= link_to new_log_entry_path(@date),
+            class: "flex w-full items-center justify-center rounded-lg border border-white/15 bg-white/[0.06] px-5 py-3 text-sm font-semibold text-neutral-100 transition hover:border-white/25 hover:bg-white/[0.10] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080a0f] active:scale-[0.99]",
+            data: { turbo_frame: "entry_form", action: "click->drawer#open" } do %>
           Add Entry
-        </button>
+        <% end %>
       </div>
     </div>
   </div>
 
-  <div class="fixed inset-0 z-40 hidden" data-drawer-target="overlay">
+  <div class="drawer-overlay fixed inset-0 z-40 hidden" data-drawer-target="overlay">
     <button
       type="button"
-      class="absolute inset-0 z-0 bg-black/55 backdrop-blur-[1px]"
+      class="drawer-backdrop absolute inset-0 z-0 bg-black/55 backdrop-blur-[1px]"
       aria-label="Close entry drawer"
       data-action="drawer#close"
     ></button>
 
     <aside
-      class="absolute right-0 top-0 z-10 h-full w-full border-l border-white/10 bg-[#0f1117] p-4 sm:max-w-md"
+      class="drawer-panel absolute right-0 top-0 z-10 h-full w-full border-l border-white/10 bg-[#0f1117] p-4 sm:max-w-md"
+      data-drawer-target="panel"
       style="background-color: #0f1117;"
       role="dialog"
       aria-modal="true"
     >
-      <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-base font-semibold tracking-tight">New Entry</h2>
-        <button
-          type="button"
-          class="rounded-md border border-white/15 px-2 py-1 text-xs text-neutral-300 transition hover:bg-white/10"
-          data-action="drawer#close"
-        >
-          Close
-        </button>
-      </div>
-
       <%= turbo_frame_tag "entry_form" do %>
-        <%# Step 1 is the same as "New" %>
-        <%# Step 2 is the same as "Update" %>
-        <%# Cannot cleanly replace as of now, because rendering partials. Maybe this could be a lazy-loaded turo frame pointing to new action %>
+        <%= render "calorie_entries/drawer_chrome", title: "New entry" %>
         <%= render "calorie_entries/photo_upload", date: @date, calorie_entry: @calorie_entry %>
       <% end %>
     </aside>

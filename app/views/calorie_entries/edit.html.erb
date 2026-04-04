@@ -1,0 +1,4 @@
+<%= turbo_frame_tag "entry_form" do %>
+  <%= render "calorie_entries/drawer_chrome", title: "Edit entry" %>
+  <%= render "calorie_entries/form", date: @date, calorie_entry: @calorie_entry %>
+<% end %>
