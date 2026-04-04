@@ -1,0 +1,24 @@
+---
+description: Minitest, request tests, and system tests
+globs:
+  - test/**/*.rb
+alwaysApply: false
+---
+
+# Tests (Minitest)
+
+## Layout
+
+- Follow existing structure: `test/models/`, `test/services/`, `test/requests/`, `test/system/`, etc.
+- Use `test_helper.rb` patterns already in the project (fixtures, helpers, Capybara for system tests).
+
+## What to cover
+
+- **Models**: validations, key scopes, and state transitions.
+- **Requests / integration**: happy path + one failure path for auth or validation when applicable.
+- **System tests**: critical user flows touching Turbo/Stimulus — keep them stable (explicit waits/assertions Capybara provides, not arbitrary `sleep` unless unavoidable).
+
+## Running
+
+- Unit/integration: `bin/rails test`
+- Browser: `bin/rails test:system` (requires setup; CI runs `db:test:prepare test:system`)

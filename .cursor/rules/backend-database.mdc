@@ -1,0 +1,24 @@
+---
+description: Migrations, schema, and seed data conventions
+globs:
+  - db/migrate/**/*.rb
+  - db/seeds.rb
+  - db/schema.rb
+alwaysApply: false
+---
+
+# Database
+
+## Migrations
+
+- One logical change per migration when practical; reversible `change` or explicit `up`/`down`.
+- Add **indexes** for foreign keys and columns used in frequent `WHERE` / `ORDER BY` clauses.
+- Prefer `null: false` with defaults when the domain requires a value; document intentional optional columns.
+
+## Schema
+
+- **`db/schema.rb` is generated** — do not hand-edit; update via migrations and `bin/rails db:migrate`.
+
+## Seeds
+
+- Keep `db/seeds.rb` idempotent and safe for `db:seed:replant` in test CI when enabled.
