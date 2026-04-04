@@ -1,6 +1,9 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 class DailyLogFlowTest < ActionDispatch::IntegrationTest
+  INVALID_NAME_81 = ("n" * 81).freeze
   test "shows entries for a given day only" do
     date = Date.new(2026, 4, 1)
     CalorieEntry.create!(eaten_on: date, calories: 510, name: "Chicken bowl", meal: :lunch, state: :final)
@@ -252,5 +255,359 @@ class DailyLogFlowTest < ActionDispatch::IntegrationTest
     entry.reload
     assert_equal "Big salad", entry.name
     assert_equal 280, entry.calories
+  end
+
+  test "root redirects to today log path" do
+    get root_path
+
+    assert_redirected_to daily_log_path("today")
+  end
+
+  test "daily log accepts today alias" do
+    get daily_log_path("today")
+
+    assert_response :success
+  end
+
+  test "new entry form with invalid date redirects" do
+    get new_log_entry_path("not-a-date")
+
+    assert_redirected_to daily_log_path(Date.current)
+    assert_equal "Invalid date format.", flash[:alert]
+  end
+
+  test "new entry form succeeds for valid date" do
+    date = Date.new(2026, 5, 1)
+    get new_log_entry_path(date)
+
+    assert_response :success
+  end
+
+  test "edit entry form with invalid date redirects" do
+    entry = CalorieEntry.create!(
+      eaten_on: Date.new(2026, 5, 2),
+      calories: 100,
+      meal: :lunch,
+      state: :final,
+      name: "Wrap"
+    )
+
+    get edit_log_calorie_entry_path("bad", entry)
+
+    assert_redirected_to daily_log_path(Date.current)
+    assert_equal "Invalid date format.", flash[:alert]
+  end
+
+  test "edit entry form succeeds when entry matches date" do
+    date = Date.new(2026, 5, 3)
+    entry = CalorieEntry.create!(
+      eaten_on: date,
+      calories: 200,
+      meal: :dinner,
+      state: :draft,
+      name: "Draft item"
+    )
+
+    get edit_log_calorie_entry_path(date, entry)
+
+    assert_response :success
+  end
+
+  test "show entry with invalid date redirects" do
+    entry = CalorieEntry.create!(
+      eaten_on: Date.new(2026, 5, 4),
+      calories: 150,
+      meal: :breakfast,
+      state: :final,
+      name: "Toast"
+    )
+
+    get log_calorie_entry_path("nope", entry)
+
+    assert_redirected_to daily_log_path(Date.current)
+    assert_equal "Invalid date format.", flash[:alert]
+  end
+
+  test "edit entry redirects when id belongs to another day" do
+    day_a = Date.new(2026, 5, 10)
+    day_b = Date.new(2026, 5, 11)
+    entry = CalorieEntry.create!(
+      eaten_on: day_a,
+      calories: 300,
+      meal: :lunch,
+      state: :final,
+      name: "Edit wrong day"
+    )
+
+    get edit_log_calorie_entry_path(day_b, entry)
+
+    assert_redirected_to daily_log_path(day_b)
+    assert_equal "Entry not found for this day.", flash[:alert]
+  end
+
+  test "show entry redirects when id belongs to another day" do
+    day_a = Date.new(2026, 5, 10)
+    day_b = Date.new(2026, 5, 11)
+    entry = CalorieEntry.create!(
+      eaten_on: day_a,
+      calories: 300,
+      meal: :lunch,
+      state: :final,
+      name: "Wrong day probe"
+    )
+
+    get log_calorie_entry_path(day_b, entry)
+
+    assert_redirected_to daily_log_path(day_b)
+    assert_equal "Entry not found for this day.", flash[:alert]
+  end
+
+  test "show returns not found for missing entry id" do
+    date = Date.new(2026, 5, 12)
+    missing_id = (CalorieEntry.maximum(:id) || 0) + 99_999
+
+    get log_calorie_entry_path(date, missing_id)
+
+    assert_response :not_found
+  end
+
+  test "create with invalid date redirects" do
+    assert_no_difference("CalorieEntry.count") do
+      post log_entries_path(date: "invalid"),
+        params: {calorie_entry: {name: "x", meal: "lunch", calories: 100}}
+    end
+
+    assert_redirected_to daily_log_path(Date.current)
+    assert_equal "Invalid date format.", flash[:alert]
+  end
+
+  test "update with invalid date redirects" do
+    date = Date.new(2026, 5, 20)
+    entry = CalorieEntry.create!(
+      eaten_on: date,
+      calories: 100,
+      meal: :lunch,
+      state: :final,
+      name: "Keep"
+    )
+
+    patch log_entry_path("bad-date", entry),
+      params: {calorie_entry: {name: "Keep", meal: "lunch", calories: 100, note: ""}}
+
+    assert_redirected_to daily_log_path(Date.current)
+    assert_equal "Invalid date format.", flash[:alert]
+    assert_equal "Keep", entry.reload.name
+  end
+
+  test "destroy with invalid date redirects" do
+    date = Date.new(2026, 5, 21)
+    entry = CalorieEntry.create!(
+      eaten_on: date,
+      calories: 100,
+      meal: :lunch,
+      state: :final,
+      name: "Survives"
+    )
+
+    assert_no_difference("CalorieEntry.count") do
+      delete delete_log_calorie_entry_path("garbage", entry)
+    end
+
+    assert_redirected_to daily_log_path(Date.current)
+    assert_equal "Invalid date format.", flash[:alert]
+    assert CalorieEntry.exists?(entry.id)
+  end
+
+  test "update redirects when entry is not on the requested day" do
+    day_a = Date.new(2026, 5, 30)
+    day_b = Date.new(2026, 5, 31)
+    entry = CalorieEntry.create!(
+      eaten_on: day_a,
+      calories: 400,
+      meal: :dinner,
+      state: :final,
+      name: "Same"
+    )
+
+    patch log_entry_path(day_b, entry),
+      params: {calorie_entry: {name: "Changed", meal: "dinner", calories: 400, note: ""}},
+      headers: {"Accept" => Mime[:turbo_stream].to_s}
+
+    assert_redirected_to daily_log_path(day_b)
+    assert_equal "Entry not found for this day.", flash[:alert]
+    assert_equal "Same", entry.reload.name
+  end
+
+  test "destroy redirects when entry is not on the requested day" do
+    day_a = Date.new(2026, 6, 1)
+    day_b = Date.new(2026, 6, 2)
+    entry = CalorieEntry.create!(
+      eaten_on: day_a,
+      calories: 200,
+      meal: :lunch,
+      state: :final,
+      name: "Protected"
+    )
+
+    assert_no_difference("CalorieEntry.count") do
+      delete delete_log_calorie_entry_path(day_b, entry),
+        headers: {"Accept" => Mime[:turbo_stream].to_s}
+    end
+
+    assert_redirected_to daily_log_path(day_b)
+    assert_equal "Entry not found for this day.", flash[:alert]
+    assert CalorieEntry.exists?(entry.id)
+  end
+
+  test "create with invalid data renders turbo stream unprocessable" do
+    date = Date.new(2026, 6, 10)
+
+    assert_no_difference("CalorieEntry.count") do
+      post log_entries_path(date: date),
+        params: {
+          calorie_entry: {
+            name: INVALID_NAME_81,
+            meal: "lunch",
+            calories: 100
+          }
+        },
+        headers: {"Accept" => Mime[:turbo_stream].to_s}
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal Mime[:turbo_stream].to_s, response.media_type
+  end
+
+  test "create with invalid data redirects html with alert" do
+    date = Date.new(2026, 6, 11)
+
+    assert_no_difference("CalorieEntry.count") do
+      post log_entries_path(date: date),
+        params: {
+          calorie_entry: {
+            name: INVALID_NAME_81,
+            meal: "breakfast",
+            calories: 50
+          }
+        }
+    end
+
+    assert_redirected_to daily_log_path(date)
+    assert_includes flash[:alert], "Name is too long"
+  end
+
+  test "update with invalid data renders turbo stream unprocessable" do
+    date = Date.new(2026, 6, 12)
+    entry = CalorieEntry.create!(
+      eaten_on: date,
+      calories: 100,
+      meal: :lunch,
+      state: :final,
+      name: "Valid"
+    )
+
+    patch log_entry_path(date, entry),
+      params: {
+        calorie_entry: {
+          name: INVALID_NAME_81,
+          meal: "lunch",
+          calories: 100,
+          note: ""
+        }
+      },
+      headers: {"Accept" => Mime[:turbo_stream].to_s}
+
+    assert_response :unprocessable_entity
+    assert_equal "Valid", entry.reload.name
+  end
+
+  test "update with invalid data redirects html with alert" do
+    date = Date.new(2026, 6, 13)
+    entry = CalorieEntry.create!(
+      eaten_on: date,
+      calories: 120,
+      meal: :snack,
+      state: :final,
+      name: "Ok"
+    )
+
+    patch log_entry_path(date, entry),
+      params: {
+        calorie_entry: {
+          name: INVALID_NAME_81,
+          meal: "snack",
+          calories: 120,
+          note: ""
+        }
+      }
+
+    assert_redirected_to daily_log_path(date)
+    assert_includes flash[:alert], "Name is too long"
+    assert_equal "Ok", entry.reload.name
+  end
+
+  test "destroy html format redirects with notice" do
+    date = Date.new(2026, 6, 14)
+    entry = CalorieEntry.create!(
+      eaten_on: date,
+      calories: 90,
+      meal: :breakfast,
+      state: :final,
+      name: "Gone soon"
+    )
+
+    assert_difference("CalorieEntry.count", -1) do
+      delete delete_log_calorie_entry_path(date, entry)
+    end
+
+    assert_redirected_to daily_log_path(date)
+    assert_equal "Entry deleted.", flash[:notice]
+  end
+
+  test "update html format redirects with notice" do
+    date = Date.new(2026, 6, 15)
+    entry = CalorieEntry.create!(
+      eaten_on: date,
+      calories: 250,
+      meal: :lunch,
+      state: :final,
+      name: "Salad"
+    )
+
+    patch log_entry_path(date, entry),
+      params: {
+        calorie_entry: {
+          name: "Big salad",
+          meal: "lunch",
+          calories: 280,
+          note: "extra"
+        }
+      }
+
+    assert_redirected_to daily_log_path(date)
+    assert_equal "Entry saved.", flash[:notice]
+    entry.reload
+    assert_equal "Big salad", entry.name
+    assert_equal 280, entry.calories
+  end
+
+  test "create html format sets draft notice" do
+    date = Date.new(2026, 6, 16)
+
+    assert_difference("CalorieEntry.count", 1) do
+      post log_entries_path(date: date),
+        params: {
+          calorie_entry: {
+            name: "Soup",
+            meal: "dinner",
+            calories: 400,
+            note: "pepper"
+          }
+        }
+    end
+
+    assert_redirected_to daily_log_path(date)
+    assert_equal "Draft ready - review and save.", flash[:notice]
+    assert CalorieEntry.order(:created_at).last.draft?
   end
 end

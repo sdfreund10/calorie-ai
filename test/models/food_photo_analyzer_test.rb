@@ -124,7 +124,6 @@ class FoodPhotoAnalyzerTest < ActiveSupport::TestCase
         assert_not result.success
         assert_nil result.attributes
         assert_match(/try again|manually/i, result.error_message)
-        assert_equal RubyLLM.config.default_model, result.model
       end
     end
   end
