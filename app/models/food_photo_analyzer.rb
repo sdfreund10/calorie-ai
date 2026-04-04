@@ -6,7 +6,7 @@ class FoodPhotoAnalyzer
 
   SYSTEM_INSTRUCTIONS = <<~TEXT.squish.freeze
     You help users log meals in a calorie tracking app. From the photo (and optional user text),
-    estimate name, meal type, total calories, and a short note if helpful.
+    estimate name, total calories, and a short note if helpful.
     Be conservative with portion sizes. Use the user's optional description as extra context.
     If the meal time is unclear, use other for meal.
   TEXT
@@ -21,7 +21,7 @@ class FoodPhotoAnalyzer
 
   def call
     unless File.file?(@image_path)
-      return Result.new(success: false, attributes: {}, error_message: "Image file is not available.", model: nil)
+      return failed_result("Image file is not available.")
     end
 
     response = llm_chat.ask(@user_description, with: @image_path)
@@ -32,7 +32,7 @@ class FoodPhotoAnalyzer
       model: model_id
     )
   rescue RubyLLM::Error, Faraday::Error, IOError, SystemCallError => e
-    Result.new(success: false, attributes: nil, error_message: safe_error(e), model: model_id)
+    failed_result(safe_error(e))
   end
 
   def model_id
@@ -56,5 +56,9 @@ class FoodPhotoAnalyzer
   def safe_error(error)
     Rails.logger.warn("[FoodPhotoAnalyzer] #{error.class}: #{error.message}")
     "Could not analyze the photo. Please try again or enter details manually."
+  end
+
+  def failed_result(error_message)
+    Result.new(success: false, attributes: nil, error_message: error_message, model: nil)
   end
 end

@@ -7,7 +7,7 @@ class FoodPhotoAnalyzerTest < ActiveSupport::TestCase
     result = FoodPhotoAnalyzer.new(image_path: "/nonexistent/meal.png").call
 
     assert_not result.success
-    assert_equal({}, result.attributes)
+    assert_nil result.attributes
     assert_match(/not available/i, result.error_message)
     assert_nil result.model
   end
