@@ -1,0 +1,24 @@
+cases:
+  - id: grilled_chicken_breast
+    image_url: https://www.allrecipes.com/thmb/WlFRrlUap2Y7aGWGUfLPPxyk_uA=/750x0/filters:no_upscale():max_bytes(150000):strip_icc()/16160-juicy-grilled-chicken-breasts-ddmfs-5594-hero-3x4-902673c819994c0191442304b40104af.jpg
+    source_url: https://www.allrecipes.com/recipe/16160/jennys-grilled-chicken-breasts/
+    user_description: 1 grilled chicken breast
+    variants:
+      # Drop description for additional test case
+      - no_description
+    expectations:
+      name: Grilled Chicken Breast
+      calories: 139
+      fat: 2 grams
+      carbs: 3 grams
+      protein: 27 grams
+  - id: grilled_chicken_breast_two
+    image_url: https://www.allrecipes.com/thmb/WlFRrlUap2Y7aGWGUfLPPxyk_uA=/750x0/filters:no_upscale():max_bytes(150000):strip_icc()/16160-juicy-grilled-chicken-breasts-ddmfs-5594-hero-3x4-902673c819994c0191442304b40104af.jpg
+    source_url: https://www.allrecipes.com/recipe/16160/jennys-grilled-chicken-breasts/
+    user_description: 2 grilled chicken breasts
+    expectations:
+      name: Grilled Chicken Breasts
+      calories: 278
+      fat: 4 grams
+      carbs: 6 grams
+      protein: 54 grams
