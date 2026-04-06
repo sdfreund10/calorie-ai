@@ -21,6 +21,7 @@ class PromptEvaluation::Runner
     end
 
     print_summary(results)
+    results
   end
 
   private
@@ -105,7 +106,6 @@ class PromptEvaluation::Runner
     if @save_results
       results = YAML.load_file(RESULTS_PATH) || {}
       results["summary"] = {
-        pass_rate: successes.size / results.size,
         avg_calorie_error: calorie_scores.sum / calorie_scores.size,
         avg_name_score: name_scores.sum / name_scores.size,
         total_tokens: total_tokens,

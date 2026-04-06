@@ -46,6 +46,7 @@ class PromptEvaluation::RunResult
 
   def to_persistable_hash
     {
+      model_id: llm_result.model,
       success: success?,
       runtime: runtime,
       token_usage: llm_result.token_usage&.stringify_keys,
