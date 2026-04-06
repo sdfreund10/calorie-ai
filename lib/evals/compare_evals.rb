@@ -163,7 +163,7 @@ module CompareEvals
       cur = current[id] || {}
       base = baseline[id] || {}
 
-      status = cur["success"] ? "pass" : "**FAIL**"
+      status = cur["success"] ? "✅ Pass" : "❌ **ERROR**"
       cal_err = format_pct(cur["calories_off_percentage"])
       name_sc = format_pct(cur["name_score"])
 
@@ -171,6 +171,11 @@ module CompareEvals
         base_cal = format_pct(base["calories_off_percentage"])
         base_name = format_pct(base["name_score"])
         cal_delta = delta_string(cur["calories_off_percentage"], base["calories_off_percentage"], lower_is_better: true)
+
+        if !cur["success"] && (cur["calories_off_percentage"] > base["calories_off_percentage"] || cur["name_score"] > base["name_score"])
+          status = "⚠️ **DEGRADED**"
+        end
+
         lines << "| #{id} | #{status} | #{cal_err} | #{name_sc} | #{base_cal} | #{base_name} | #{cal_delta} |"
       else
         lines << "| #{id} | #{status} | #{cal_err} | #{name_sc} |"
