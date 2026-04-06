@@ -1,36 +1,70 @@
+require "optparse"
 require "yaml"
 
-# TODO: Log values for comparison over time
-# TODO: More test cases
-# TODO: Run test cases multiple times and average the results
-# TODO: Estimate token usage and cost of tests
-# TODO: Introduce variants (ie no description)
-# TODO: Log time taken for each test case
+# IDEA: Store some results in a committed file.
+#   A CI worker pulls that file from the main branch and compares if to a new run on the current branch.
+#   Then the branch can update the results file and reset the baseline in the main automatically.
 module PromptEvaluation
   extend self
 
-  # Invoked from the bottom of this file when executed via `rails runner lib/prompt_evaluation.rb`.
-  # The file can load twice in one process (Zeitwerk/autoload_lib during boot, then Kernel.load from
-  # runner); without this guard, `run!` would fire twice.
-  def self.run_from_cli!
-    return unless __FILE__ == $0
-    return if @cli_runner_done
+  def parse_cli!(argv)
+    options = {
+      model_id: RubyLLM.config.default_model,
+      save_results: true,
+      only_case_id: nil
+    }
 
-    @cli_runner_done = true
-    run!
+    OptionParser.new do |parser|
+      script = Pathname.new(__FILE__).relative_path_from(Rails.root)
+      parser.banner = <<~BANNER
+        Run FoodPhotoAnalyzer against eval cases in lib/evals/cases.yml.
+
+        Usage:
+          bin/rails runner #{script} [options]
+
+        Examples:
+          bin/rails runner #{script} --case-id=grilled_chicken_breast
+          bin/rails runner #{script} --model=gpt-4o-mini --no-save
+      BANNER
+
+      parser.separator ""
+      parser.separator "Options:"
+
+      parser.on("--model=ID", "RubyLLM model id (default: #{RubyLLM.config.default_model})") { |v| options[:model_id] = v.strip }
+      parser.on("--no-save", "Do not write lib/evals/results.yml") { options[:save_results] = false }
+      parser.on("--case-id=ID", "Run only this case id") { |v| options[:only_case_id] = v.strip }
+      parser.on("-h", "--help", "Show this help") do
+        puts parser
+        exit 0
+      end
+    end.parse!(argv)
+
+    options
   end
 
-  # runs evaluation, prints result, and logs to file
-  def self.run!
-    cases = Case.all
-    puts "Running #{cases.count} cases..."
+  # runs evaluation, prints result, and optionally persists metrics to lib/evals/results.yml
+  def run!(model_id: RubyLLM.config.default_model, save_results: true, only_case_id: nil)
+    start_message = "Running evaluations with model #{model_id}."
+    start_message += " --no-save" unless save_results
+    start_message += " --case-id=#{only_case_id}" if only_case_id
+    puts start_message
+    all_cases = Case.all
+    cases = only_case_id ? all_cases.select { |c| c.id == only_case_id } : all_cases
+    if only_case_id && cases.empty?
+      warn "Unknown --case-id=#{only_case_id}. Valid ids: #{all_cases.map(&:id).join(", ")}"
+      exit 1
+    end
+
+    puts "Running #{cases.count} cases#{" (model: #{model_id})" if model_id.present?}..."
 
     puts "Results:"
     cases.each do |test_case|
-      test_case.run!
+      test_case.run!(model_id: model_id)
       lines = test_case.result_lines
       puts "  #{lines.first}"
       lines.drop(1).each { |line| puts "    #{line}" }
+      test_case.save_result! if save_results
+      # TODO: Run test cases multiple times and average the results
       # 2.times do
       #   test_case.rerun!
       #   lines = test_case.result_lines
@@ -41,12 +75,15 @@ module PromptEvaluation
   end
 
   class Case
+    attr_reader :id
+
     def initialize(id:, image_url:, source_url:, user_description:, expectations:)
       @id = id
       @image_url = image_url
       @source_url = source_url
       @user_description = user_description
       @expectations = expectations.with_indifferent_access
+      @runtime = nil
     end
 
     def with_remote_image(&block)
@@ -59,9 +96,18 @@ module PromptEvaluation
       end
     end
 
-    def run!
+    def with_timing
+      start = Time.now
+      result = yield
+      @runtime = Time.now - start
+      result
+    end
+
+    def run!(model_id: RubyLLM.config.default_model)
       @llm_result ||= with_remote_image do |image_path|
-        FoodPhotoAnalyzer.new(image_path: image_path, user_description: @user_description).call
+        with_timing do
+          FoodPhotoAnalyzer.new(image_path: image_path, user_description: @user_description, model_id: model_id).call
+        end
       end
     end
 
@@ -72,6 +118,19 @@ module PromptEvaluation
 
     attr_reader :llm_result
 
+    def save_result!
+      file = Rails.root.join("lib", "evals", "results.yml")
+      results = YAML.load_file(file) || {}
+      results[@id] = {
+        success: success?,
+        runtime: @runtime,
+        token_usage: llm_result.token_usage&.stringify_keys,
+        calories_off_percentage: calories_off_percentage,
+        name_score: name_score
+      }.stringify_keys
+      File.write(file, results.to_yaml)
+    end
+
     def expected_calories
       @expectations[:calories]
     end
@@ -81,9 +140,10 @@ module PromptEvaluation
       return failure_result_lines unless success?
 
       lines = ["[#{@id}] ✓"]
+      lines << runtime_line if @runtime.present?
+      lines << token_usage_string if token_usage_line?
       lines << calorie_detail_line if calories_off_percentage.present?
       lines << name_detail_line if name_score.present?
-      lines << token_usage_string if token_usage_line?
       lines
     end
 
@@ -116,10 +176,6 @@ module PromptEvaluation
       @expectations[:name]
     end
 
-    def result_name
-      llm_result.attributes&.name
-    end
-
     def name_score
       return nil if result_name.blank?
 
@@ -129,7 +185,7 @@ module PromptEvaluation
     end
 
     def self.all
-      file = Rails.root.join("lib", "prompt_evaluation", "cases.yml")
+      file = Rails.root.join("lib", "evals", "cases.yml")
       YAML.load_file(file)["cases"].map do |case_data|
         new(
           id: case_data["id"],
@@ -142,6 +198,10 @@ module PromptEvaluation
     end
 
     private
+
+    def result_name
+      llm_result.attributes&.name
+    end
 
     def failure_result_lines
       msg = llm_result.error_message.to_s.strip.gsub(/\s+/, " ")
@@ -168,6 +228,10 @@ module PromptEvaluation
       "Tokens    #{usage[:input]} (input) + #{usage[:output]} (output) = #{usage[:input] + usage[:output]} (total)"
     end
 
+    def runtime_line
+      "Runtime   #{@runtime} seconds"
+    end
+
     def format_pct(value)
       return "—" if value.nil?
 
@@ -179,4 +243,7 @@ module PromptEvaluation
   end
 end
 
-PromptEvaluation.run_from_cli!
+if __FILE__ == $0
+  args = PromptEvaluation.parse_cli!(ARGV)
+  PromptEvaluation.run!(**args)
+end

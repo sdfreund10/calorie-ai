@@ -1,0 +1,132 @@
+cases:
+  - id: grilled_chicken_breast
+    image_url: https://www.allrecipes.com/thmb/WlFRrlUap2Y7aGWGUfLPPxyk_uA=/750x0/filters:no_upscale():max_bytes(150000):strip_icc()/16160-juicy-grilled-chicken-breasts-ddmfs-5594-hero-3x4-902673c819994c0191442304b40104af.jpg
+    source_url: https://www.allrecipes.com/recipe/16160/jennys-grilled-chicken-breasts/
+    user_description: 1 grilled chicken breast
+    expectations:
+      name: Grilled Chicken Breast
+      calories: 139
+      fat: 2 grams
+      carbs: 3 grams
+      protein: 27 grams
+  - id: grilled_chicken_breast_two
+    image_url: https://www.allrecipes.com/thmb/WlFRrlUap2Y7aGWGUfLPPxyk_uA=/750x0/filters:no_upscale():max_bytes(150000):strip_icc()/16160-juicy-grilled-chicken-breasts-ddmfs-5594-hero-3x4-902673c819994c0191442304b40104af.jpg
+    source_url: https://www.allrecipes.com/recipe/16160/jennys-grilled-chicken-breasts/
+    user_description: 2 grilled chicken breasts
+    expectations:
+      name: Grilled Chicken Breasts
+      calories: 278
+      fat: 4 grams
+      carbs: 6 grams
+      protein: 54 grams
+  # Displays a plate of 4 chicken breasts - with no description, assume the whole plate is the portion
+  - id: grilled_chicken_breast_no_description
+    image_url: https://www.allrecipes.com/thmb/WlFRrlUap2Y7aGWGUfLPPxyk_uA=/750x0/filters:no_upscale():max_bytes(150000):strip_icc()/16160-juicy-grilled-chicken-breasts-ddmfs-5594-hero-3x4-902673c819994c0191442304b40104af.jpg
+    source_url: https://www.allrecipes.com/recipe/16160/jennys-grilled-chicken-breasts/
+    user_description:
+    expectations:
+      name: Grilled Chicken Breasts
+      calories: 556
+      fat: 8 grams
+      carbs: 12 grams
+      protein: 108 grams
+
+  - id: clementine
+    image_url: https://www.foodcoachforme.com/wp-content/uploads/2020/02/clementine-dark-table-.jpg
+    source_url: https://www.verywellfit.com/clementine-nutrition-facts-4584911
+    user_description: 1 clementine
+    expectations:
+      name: Clementine
+      calories: 35
+      fat: 0.1 grams
+      carbs: 8.9 grams
+      protein: 0.6 grams
+
+  - id: clementine_no_description
+    image_url: https://www.foodcoachforme.com/wp-content/uploads/2020/02/clementine-dark-table-.jpg
+    source_url: https://www.verywellfit.com/clementine-nutrition-facts-4584911
+    user_description:
+    expectations:
+      name: Clementine
+      calories: 35
+      fat: 0.1 grams
+      carbs: 8.9 grams
+      protein: 0.6 grams
+
+  - id: froot_loops_label
+    image_url: https://c8.alamy.com/comp/KFHENP/nutrition-facts-label-for-kelloggs-froot-loops-cereal-KFHENP.jpg
+    source_url:
+    user_description: 1 bowl
+    expectations:
+      name: Froot Loops
+      calories: 100
+      fat: 1 grams
+      carbs: 24 grams
+      protein: 1 grams
+
+  - id: froot_loops_label_no_description
+    image_url: https://c8.alamy.com/comp/KFHENP/nutrition-facts-label-for-kelloggs-froot-loops-cereal-KFHENP.jpg
+    source_url:
+    user_description:
+    expectations:
+      name: Froot Loops
+      calories: 100
+      fat: 1 grams
+      carbs: 24 grams
+      protein: 1 grams
+
+  - id: pork_carnitas_taco
+    image_url: https://imagesvc.meredithcorp.io/v3/mm/image?url=https%3A%2F%2Fimages.media-allrecipes.com%2Fuserphotos%2F9297602.jpg&q=60&c=sc&poi=auto&orient=true&h=512
+    source_url: https://www.allrecipes.com/recipe/219048/pork-carnitas/
+    user_description: carnitas tacos
+    expectations:
+      name: Carnitas Tacos
+      calories: 500
+      fat: 38 grams
+      carbs: 4 grams
+      protein: 32 grams
+
+  # Displays a plate of 2 tacos - I'll be shocked if it can get this one
+  - id: pork_carnitas_taco_no_description
+    image_url: https://imagesvc.meredithcorp.io/v3/mm/image?url=https%3A%2F%2Fimages.media-allrecipes.com%2Fuserphotos%2F9297602.jpg&q=60&c=sc&poi=auto&orient=true&h=512
+    source_url: https://www.allrecipes.com/recipe/219048/pork-carnitas/
+    user_description:
+    expectations:
+      name: Carnitas Tacos
+      calories: 500
+      fat: 38 grams
+      carbs: 4 grams
+      protein: 32 grams
+
+  - id: mapo_tofu
+    image_url: https://www.seriouseats.com/thmb/PUwkgdZ1AfxOmbYFhf3SQiv0zsw=/750x0/filters:no_upscale():max_bytes(150000):strip_icc()/__opt__aboutcom__coeus__resources__content_migration__serious_eats__seriouseats.com__2011__07__2021-02-12-Mapo-Tofu-MHOM-10-804db1211f1d47dbae505341d1e7b994.jpg
+    source_url: https://www.seriouseats.com/real-deal-mapo-dofu-tofu-chinese-sichuan-recipe
+    user_description: 1 serving mapo tofu
+    expectations:
+      name: Mapo Tofu
+      calories: 462
+      fat: 38 grams
+      carbs: 10 grams
+      protein: 21 grams
+
+  - id: mapo_tofu_with_rice
+    image_url: https://www.seriouseats.com/thmb/PUwkgdZ1AfxOmbYFhf3SQiv0zsw=/750x0/filters:no_upscale():max_bytes(150000):strip_icc()/__opt__aboutcom__coeus__resources__content_migration__serious_eats__seriouseats.com__2011__07__2021-02-12-Mapo-Tofu-MHOM-10-804db1211f1d47dbae505341d1e7b994.jpg
+    source_url: https://www.seriouseats.com/real-deal-mapo-dofu-tofu-chinese-sichuan-recipe
+    user_description: 1 serving mapo tofu with rice
+    expectations:
+      name: Mapo Tofu with Rice
+      calories: 562
+      fat: 38 grams
+      carbs: 10 grams
+      protein: 21 grams
+
+  - id: mapo_tofu_no_description
+    image_url: https://www.seriouseats.com/thmb/PUwkgdZ1AfxOmbYFhf3SQiv0zsw=/750x0/filters:no_upscale():max_bytes(150000):strip_icc()/__opt__aboutcom__coeus__resources__content_migration__serious_eats__seriouseats.com__2011__07__2021-02-12-Mapo-Tofu-MHOM-10-804db1211f1d47dbae505341d1e7b994.jpg
+    source_url: https://www.seriouseats.com/real-deal-mapo-dofu-tofu-chinese-sichuan-recipe
+    user_description:
+    expectations:
+      name: Mapo Tofu
+      calories: 462
+      fat: 38 grams
+      carbs: 10 grams
+      protein: 21 grams

@@ -1,0 +1,113 @@
+---
+grilled_chicken_breast:
+  success: true
+  runtime: 1.748349
+  token_usage:
+    input: 880
+    output: 60
+  calories_off_percentage: 101.43884892086331
+  name_score: 100.0
+grilled_chicken_breast_two:
+  success: true
+  runtime: 1.807387
+  token_usage:
+    input: 881
+    output: 73
+  calories_off_percentage: 51.07913669064749
+  name_score: 100.0
+grilled_chicken_breast_no_description:
+  success: true
+  runtime: 1.698927
+  token_usage:
+    input: 873
+    output: 78
+  calories_off_percentage: 6.474820143884892
+  name_score: 100.0
+clementine:
+  success: true
+  runtime: 2.514982
+  token_usage:
+    input: 1876
+    output: 44
+  calories_off_percentage: 0.0
+  name_score: 100.0
+clementine_no_description:
+  success: true
+  runtime: 3.000169
+  token_usage:
+    input: 1870
+    output: 60
+  calories_off_percentage: 700.0
+  name_score: 0.0
+fruit_loops_label:
+  success: true
+  runtime: 1.890951
+  token_usage:
+    input: 1860
+    output: 55
+  calories_off_percentage: 50.0
+  name_score: 50.0
+fruit_loops_label_no_description:
+  success: true
+  runtime: 2.168474
+  token_usage:
+    input: 1856
+    output: 39
+  calories_off_percentage: 0.0
+  name_score: 50.0
+pork_carnitas_taco:
+  success: true
+  runtime: 1.566461
+  token_usage:
+    input: 671
+    output: 70
+  calories_off_percentage: 4.0
+  name_score: 100.0
+pork_carnitas_taco_no_description:
+  success: true
+  runtime: 4.070836
+  token_usage:
+    input: 667
+    output: 62
+  calories_off_percentage: 4.0
+  name_score: 100.0
+mapo_tofu:
+  success: true
+  runtime: 1.98134
+  token_usage:
+    input: 881
+    output: 71
+  calories_off_percentage: 12.554112554112553
+  name_score: 100.0
+froot_loops_label:
+  success: true
+  runtime: 1.813818
+  token_usage:
+    input: 1860
+    output: 55
+  calories_off_percentage: 50.0
+  name_score: 100.0
+froot_loops_label_no_description:
+  success: true
+  runtime: 1.811722
+  token_usage:
+    input: 1856
+    output: 55
+  calories_off_percentage: 0.0
+  name_score: 100.0
+mapo_tofu_with_rice:
+  success: true
+  runtime: 1.697258
+  token_usage:
+    input: 883
+    output: 63
+  calories_off_percentage: 7.473309608540925
+  name_score: 100.0
+mapo_tofu_no_description:
+  success: true
+  runtime: 1.769685
+  token_usage:
+    input: 873
+    output: 70
+  calories_off_percentage: 12.554112554112553
+  name_score: 100.0
