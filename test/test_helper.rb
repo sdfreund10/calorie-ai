@@ -66,7 +66,8 @@ module ActiveSupport
         success: success,
         attributes: attributes,
         error_message: error_message,
-        model: resolved_model
+        model: resolved_model,
+        token_usage: nil
       )
     end
   end

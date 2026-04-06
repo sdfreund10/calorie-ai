@@ -1,0 +1,50 @@
+name: LLM Evals
+
+on:
+  pull_request:
+    paths:
+      - app/models/food_photo_analyzer.rb
+      - app/models/meal_suggestion_schema.rb
+      - lib/evals/**
+      - config/initializers/ruby_llm.rb
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Compare eval results
+        run: >
+          ruby lib/evals/compare_evals.rb
+          --base-sha=${{ github.event.pull_request.base.sha }}
+          --output=tmp/eval_report.md
+
+      - name: Find PR comment
+        id: find-comment
+        uses: peter-evans/find-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: github-actions[bot]
+          body-includes: 'LLM Eval Results'
+
+      - name: Post PR comment
+        if: success() && hashFiles('tmp/eval_report.md') != ''
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          edit-mode: replace
+          body-path: tmp/eval_report.md

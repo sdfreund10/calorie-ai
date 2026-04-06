@@ -96,7 +96,7 @@ class FoodPhotoAnalyzerTest < ActiveSupport::TestCase
     def ask(prompt, with:)
       @captured_prompt = prompt
       @captured_image_path = with
-      Struct.new(:content).new(@response_content)
+      Struct.new(:content, :input_tokens, :output_tokens).new(@response_content, 0, 0)
     end
   end
 

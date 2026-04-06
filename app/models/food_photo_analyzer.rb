@@ -2,7 +2,7 @@
 
 # Calls a vision-capable RubyLLM model with MealSuggestionSchema. Returns a simple result object.
 class FoodPhotoAnalyzer
-  Result = Data.define(:success, :attributes, :error_message, :model)
+  Result = Data.define(:success, :attributes, :error_message, :model, :token_usage)
 
   SYSTEM_INSTRUCTIONS = <<~TEXT.squish.freeze
     You help users log meals in a calorie tracking app. From the photo (and optional user text),
@@ -13,10 +13,13 @@ class FoodPhotoAnalyzer
 
   OUTPUT_SCHEMA = MealSuggestionSchema
 
+  attr_reader :token_usage
+
   def initialize(image_path:, user_description: nil, model_id: nil)
     @image_path = image_path
     @user_description = user_description
     @model_id = model_id.presence
+    @token_usage = {input: 0, output: 0}
   end
 
   def call
@@ -25,11 +28,13 @@ class FoodPhotoAnalyzer
     end
 
     response = llm_chat.ask(@user_description, with: @image_path)
+    log_token_usage(response)
     Result.new(
       success: true,
       attributes: OUTPUT_SCHEMA.serialize_output(response.content),
       error_message: nil,
-      model: model_id
+      model: model_id,
+      token_usage: @token_usage.dup
     )
   rescue RubyLLM::Error, Faraday::Error, IOError, SystemCallError => e
     failed_result(safe_error(e))
@@ -59,6 +64,11 @@ class FoodPhotoAnalyzer
   end
 
   def failed_result(error_message)
-    Result.new(success: false, attributes: nil, error_message: error_message, model: nil)
+    Result.new(success: false, attributes: nil, error_message: error_message, model: nil, token_usage: nil)
+  end
+
+  def log_token_usage(response)
+    @token_usage[:input] = response.input_tokens
+    @token_usage[:output] = response.output_tokens
   end
 end
