@@ -42,6 +42,7 @@ cases:
       carbs: 8.9 grams
       protein: 0.6 grams
 
+  # hand holding a clementine in front of a bowl of clementines - validate if it can distinguish background
   - id: clementine_no_description
     image_url: https://www.foodcoachforme.com/wp-content/uploads/2020/02/clementine-dark-table-.jpg
     source_url: https://www.verywellfit.com/clementine-nutrition-facts-4584911
