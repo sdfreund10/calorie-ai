@@ -11,7 +11,7 @@ class MealSuggestionSchema < RubyLLM::Schema
     max_length: 80
 
   integer :calories,
-    description: "Estimated total calories for the visible portion",
+    description: "Estimated total calories for the specified or inferred serving",
     required: true
 
   string :note,

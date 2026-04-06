@@ -6,9 +6,12 @@ class FoodPhotoAnalyzer
 
   SYSTEM_INSTRUCTIONS = <<~TEXT.squish.freeze
     You help users log meals in a calorie tracking app. From the photo (and optional user text),
-    estimate name, total calories, and a short note if helpful.
-    Be conservative with portion sizes. Use the user's optional description as extra context.
-    If the meal time is unclear, use other for meal.
+    estimate the dish name, total calories, and an optional note.
+    When user text specifies items or quantity (e.g. "1 chicken breast"), estimate only that
+    amount even if the photo shows more food. Without user text, estimate a single reasonable
+    serving of the main food item in focus.
+    If a nutrition facts label is visible, use its per-serving values. Estimate conservatively
+    using standard home-cooked portions rather than generous restaurant servings.
   TEXT
 
   OUTPUT_SCHEMA = MealSuggestionSchema

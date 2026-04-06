@@ -107,7 +107,7 @@ module CompareEvals
     yaml = `git show main:#{RESULTS_GIT_PATH} 2>/dev/null`
     return {} unless $?.success? && !yaml.nil? && !yaml.strip.empty?
 
-    YAML.safe_load(yaml) || {}
+    YAML.load(yaml).with_indifferent_access || {}
   end
 
   # --- markdown report ---
