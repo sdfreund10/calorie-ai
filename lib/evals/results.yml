@@ -2,46 +2,46 @@
 grilled_chicken_breast:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 7.460519999964163
+  runtime: 2.3303360000718385
   token_usage:
-    input: 936
-    output: 73
-  calories_off_percentage: 105.03597122302158
+    input: 977
+    output: 64
+  calories_off_percentage: 18.705035971223023
   name_score: 100.0
 grilled_chicken_breast_two:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 1.6590130000840873
+  runtime: 2.970642999978736
   token_usage:
-    input: 937
-    output: 72
+    input: 978
+    output: 65
   calories_off_percentage: 58.27338129496403
   name_score: 100.0
 grilled_chicken_breast_no_description:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 5.402284999843687
+  runtime: 1.9349470001179725
   token_usage:
-    input: 929
-    output: 72
+    input: 970
+    output: 77
   calories_off_percentage: 6.474820143884892
   name_score: 100.0
 clementine:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 2.3241319998633116
+  runtime: 2.9342420001048595
   token_usage:
-    input: 1932
-    output: 18
+    input: 1973
+    output: 68
   calories_off_percentage: 0.0
   name_score: 100.0
 clementine_no_description:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 3.183467000024393
+  runtime: 2.9636880001053214
   token_usage:
-    input: 1926
-    output: 51
+    input: 1967
+    output: 16
   calories_off_percentage: 77.14285714285715
   name_score: 0.0
 fruit_loops_label:
@@ -63,68 +63,68 @@ fruit_loops_label_no_description:
 pork_carnitas_taco:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 2.0137350000441074
+  runtime: 2.329856000142172
   token_usage:
-    input: 727
-    output: 73
+    input: 768
+    output: 84
   calories_off_percentage: 4.0
   name_score: 100.0
 pork_carnitas_taco_no_description:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 1.7066699999850243
+  runtime: 2.0898070000112057
   token_usage:
-    input: 723
-    output: 73
-  calories_off_percentage: 4.0
-  name_score: 100.0
+    input: 764
+    output: 92
+  calories_off_percentage: 16.0
+  name_score: 50.0
 mapo_tofu:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 2.8085459999274462
+  runtime: 2.3476729998365045
   token_usage:
-    input: 937
-    output: 83
-  calories_off_percentage: 12.554112554112553
+    input: 978
+    output: 84
+  calories_off_percentage: 2.5974025974025974
   name_score: 100.0
 froot_loops_label:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 3.145617000060156
+  runtime: 2.033242999808863
   token_usage:
-    input: 1916
-    output: 57
-  calories_off_percentage: 0.0
+    input: 1957
+    output: 60
+  calories_off_percentage: 50.0
   name_score: 100.0
 froot_loops_label_no_description:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 2.97750600008294
+  runtime: 1.8346809998620301
   token_usage:
-    input: 1912
-    output: 54
+    input: 1953
+    output: 44
   calories_off_percentage: 0.0
   name_score: 100.0
 mapo_tofu_with_rice:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 2.383053000085056
+  runtime: 2.309156999923289
   token_usage:
-    input: 939
-    output: 86
+    input: 980
+    output: 82
   calories_off_percentage: 7.473309608540925
   name_score: 100.0
 mapo_tofu_no_description:
   model_id: claude-haiku-4-5
   success: true
-  runtime: 2.5871049999259412
+  runtime: 2.0167350000701845
   token_usage:
-    input: 929
-    output: 81
+    input: 970
+    output: 73
   calories_off_percentage: 12.554112554112553
   name_score: 100.0
 summary:
-  :avg_calorie_error: 23.959047043457804
-  :avg_name_score: 91.66666666666667
-  :total_tokens: 15536
-  :total_runtime: 37.65164899989031
+  :avg_calorie_error: 21.1017432760821
+  :avg_name_score: 87.5
+  :total_tokens: 16044
+  :total_runtime: 28.095008000032976
