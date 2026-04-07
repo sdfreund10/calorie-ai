@@ -105,9 +105,12 @@ module CompareEvals
 
   def load_baseline_results
     yaml = `git show main:#{RESULTS_GIT_PATH} 2>/dev/null`
-    return {} unless $?.success? && !yaml.nil? && !yaml.strip.empty?
-
-    YAML.load(yaml).with_indifferent_access || {}
+    if yaml.nil? || yaml.strip.empty?
+      warn "No baseline results found at main:#{RESULTS_GIT_PATH}."
+      {}
+    else
+      YAML.load(yaml).transform_keys(&:to_s)
+    end
   end
 
   # --- markdown report ---
