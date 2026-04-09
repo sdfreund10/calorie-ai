@@ -104,7 +104,7 @@ module CompareEvals
   end
 
   def load_baseline_results
-    yaml = `git show main:#{RESULTS_GIT_PATH} 2>/dev/null`
+    yaml = `git show origin/main:#{RESULTS_GIT_PATH} 2>/dev/null`
     if yaml.nil? || yaml.strip.empty?
       warn "No baseline results found at main:#{RESULTS_GIT_PATH}."
       {}
