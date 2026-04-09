@@ -24,6 +24,9 @@ jobs:
       - name: Fetch main branch
         run: git fetch origin main
 
+      - name: Check for baseline results
+        run: git show main:lib/evals/results.yml
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
