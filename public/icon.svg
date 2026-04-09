@@ -1,3 +1,53 @@
-<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="256" cy="256" r="256" fill="red"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Lunchbox">
+  <!-- Canvas matches app shell -->
+  <rect width="32" height="32" rx="8" fill="#080a0f"/>
+  <!-- Handle -->
+  <path
+    fill="none"
+    stroke="#9ca3af"
+    stroke-width="1.2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    d="M 11 12.25 V 9.25 Q 16 5.25 21 9.25 V 12.25"
+  />
+  <!-- Box -->
+  <rect
+    x="7.5"
+    y="12"
+    width="17"
+    height="14"
+    rx="2.5"
+    fill="#0f1117"
+    stroke="#52525b"
+    stroke-width="1"
+  />
+  <!-- Lid panel (slightly lifted tone) -->
+  <rect
+    x="8.35"
+    y="12.65"
+    width="15.3"
+    height="5.1"
+    rx="1.6"
+    fill="#151b26"
+    stroke="none"
+  />
+  <!-- Lid seam -->
+  <line
+    x1="8.5"
+    y1="18.35"
+    x2="23.5"
+    y2="18.35"
+    stroke="#3f3f46"
+    stroke-width="0.75"
+    stroke-linecap="round"
+  />
+  <!-- Clasp -->
+  <rect
+    x="14.75"
+    y="19.15"
+    width="2.5"
+    height="1.85"
+    rx="0.45"
+    fill="#6b7280"
+  />
 </svg>
