@@ -5,10 +5,19 @@ class FoodPhotoAnalyzer
   Result = Data.define(:success, :attributes, :error_message, :model, :token_usage)
 
   SYSTEM_INSTRUCTIONS = <<~TEXT.squish.freeze
-    You help users log meals in a calorie tracking app. From the photo (and optional user text),
-    estimate name, total calories, and a short note if helpful.
-    Be conservative with portion sizes. Use the user's optional description as extra context.
-    If the meal time is unclear, use other for meal.
+    You help users log meals in a calorie tracking app. A user will provide you a photo of their meal
+    and optionally a description of what they ate. Your goal is to identify the food and estimate the calories.
+
+    ## STEPS
+    1. Identify the food in the photos and described by the user.
+    2. Estimate the calories of a single portion.
+    3. Estimate the approximate portion based on the user's description and food displayed in the photo.
+    4. Compute the approximate calories and return the results.
+
+    ## FURTHER INSTRUCTIONS
+    - Pay careful attention to the user's description when estimate the portion size.
+    - Without user text, estimate a single reasonable serving of the main food in focus.
+    - Estimate conservatively using standard servings.
   TEXT
 
   OUTPUT_SCHEMA = MealSuggestionSchema
