@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Prepare this app for production on a host where Ruby and PostgreSQL are already installed.
+#
+# Required environment (export before running, or put KEY=value lines in .env.production):
+#   RAILS_MASTER_KEY              — from config/master.key (decrypts credentials / secret_key_base)
+#   CALORIE_AI_DATABASE_PASSWORD  — PostgreSQL password for user calorie_ai (see config/database.yml)
+#   ANTHROPIC_API_KEY             — meal photo analysis (omit if you do not use that feature)
+#   SOLID_QUEUE_IN_PUMA=true      — run Solid Queue inside Puma (recommended for a single host)
+#
+# PostgreSQL must allow user calorie_ai to connect and create databases (or you must create the
+# four production databases yourself); then bin/rails db:prepare can migrate them.
+#
+# Usage:
+#   bin/prod-setup           # install gems, precompile assets, db:prepare
+#   bin/prod-setup --serve   # same, then exec Puma bound to 0.0.0.0
+
+set -euo pipefail
+
+# Probs don't need this?
+# ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# cd "$ROOT"
+
+if [[ -f .env.production ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env.production
+  set +a
+fi
+
+if [[ -z "${RAILS_MASTER_KEY:-}" ]]; then
+  echo "Error: RAILS_MASTER_KEY is not set. Export it or add it to .env.production (same value as config/master.key)." >&2
+  exit 1
+fi
+
+if [[ -z "${CALORIE_AI_DATABASE_PASSWORD:-}" ]]; then
+  echo "Error: CALORIE_AI_DATABASE_PASSWORD is not set. Export it or add it to .env.production (see config/database.yml)." >&2
+  exit 1
+fi
+
+export RAILS_ENV=production
+
+if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
+  echo "Warning: ANTHROPIC_API_KEY is unset; AI photo analysis will not work until you set it." >&2
+fi
+
+echo "== Configuring Bundler for production =="
+bundle config set deployment true
+bundle config set without "development:test"
+
+echo "== Installing gems =="
+bundle install
+
+echo "== Precompiling assets =="
+SECRET_KEY_BASE_DUMMY=1 bin/rails assets:precompile
+
+echo "== Preparing databases (create if allowed, migrate) =="
+bin/rails db:prepare
+
+echo ""
+echo "Production setup finished."
+echo "Start the app (example):"
+echo "  RAILS_ENV=production SOLID_QUEUE_IN_PUMA=true bin/rails server -b 0.0.0.0"
+echo "Point Cloudflare Tunnel (or your reverse proxy) at http://127.0.0.1:\${PORT:-3000}"
+
+if [[ "${1:-}" == "--serve" ]]; then
+  echo ""
+  echo "== Starting Puma (0.0.0.0:${PORT:-3000}) =="
+  export SOLID_QUEUE_IN_PUMA="${SOLID_QUEUE_IN_PUMA:-true}"
+  exec bin/rails server -b 0.0.0.0
+fi
